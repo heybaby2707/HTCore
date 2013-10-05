@@ -71,6 +71,9 @@ enum eCreatures
 
     //Misc
     NPC_COUNCIL_PLUME_STALKER   = 45420,
+
+	// Ascendants
+	NPC_LEAPING_FLAMES = 47040,
 };
 
 enum eGameObjects

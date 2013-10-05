@@ -671,20 +671,20 @@ void AddSC_shattrath_city();
 void AddSC_terokkar_forest();
 void AddSC_zangarmarsh();
 
-void AddSC_instance_throne_of_the_tides();      //Throne of the Tides
+void AddSC_instance_throne_of_the_tides();      // Throne of the Tides
 void AddSC_boss_nazjar();
 void AddSC_boss_ulthok();
 void AddSC_boss_erunak_stonespeaker();
 void AddSC_boss_ozumat();
 
-void AddSC_instance_bastion_of_twilight();
+void AddSC_instance_bastion_of_twilight();		// Raid Bastion Of Twilight
 void AddSC_boss_valiona_theralion();
 void AddSC_boss_halfus_wyrmbreaker();
 void AddSC_boss_chogall();
-//void AddSC_boss_ascendant_council();
+void AddSC_boss_ascendant_council();
 
 
-void AddSC_instance_grim_batol();// Dungeon Grim Batol
+void AddSC_instance_grim_batol();				// Dungeon Grim Batol
 void AddSC_boss_drahga_shadowburner();
 void AddSC_boss_erudax();
 void AddSC_boss_forgemaster_throngus();
@@ -1238,17 +1238,17 @@ void AddOutlandScripts()
     AddSC_terokkar_forest();
     AddSC_zangarmarsh();
 
-    AddSC_instance_throne_of_the_tides();      //Throne of the Tides
+    AddSC_instance_throne_of_the_tides();		// Throne of the Tides
     AddSC_boss_nazjar();
     AddSC_boss_ulthok();
     AddSC_boss_erunak_stonespeaker();
     AddSC_boss_ozumat();
 
-    AddSC_instance_bastion_of_twilight();
+    AddSC_instance_bastion_of_twilight();		// Raid Bastion Of Twilight
     AddSC_boss_valiona_theralion();
     AddSC_boss_halfus_wyrmbreaker();
     AddSC_boss_chogall();
-//  AddSC_boss_ascendant_council();
+	AddSC_boss_ascendant_council();
 
 #endif
 }
