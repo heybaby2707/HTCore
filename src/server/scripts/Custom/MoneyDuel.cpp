@@ -188,7 +188,7 @@ class npc_blood_money : public CreatureScript
 	{
 		if (player->GetName().c_str() == code)
 		{
-			ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFNow why would you want to challenge yourself?");
+			ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFNow why would you want to challenge yourself?");
 			return false;
 		}
 		if (uint64 targetGUID = sObjectMgr->GetPlayerGUIDByName(code))
@@ -197,7 +197,7 @@ class npc_blood_money : public CreatureScript
 			{
 				if (target->GetGUID() == player->GetGUID())
 				{
-					ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFNow why would you want to challenge yourself?");
+					ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFNow why would you want to challenge yourself?");
 					return false;
 				}
 				if (target->GetZoneId() == player->GetZoneId())
@@ -206,13 +206,13 @@ class npc_blood_money : public CreatureScript
 					{
 						if (target->GetItemCount(TOKEN_ID) < action)
 						{
-							ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFThat player does not have enough tokens to make the bet!");
+							ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFThat player does not have enough tokens to make the bet!");
 							player->CLOSE_GOSSIP_MENU();
 							return false;
 						}
 						if (player->GetItemCount(TOKEN_ID) < action)
 						{
-							ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou do not have enough tokens to make the bet!");
+							ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou do not have enough tokens to make the bet!");
 							player->CLOSE_GOSSIP_MENU();
 							return false;
 						}
@@ -235,10 +235,10 @@ class npc_blood_money : public CreatureScript
 								creature->MonsterWhisper(msg, target->GetGUID(), true);
 							}
 							else
-								ChatHandler(target->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou cannot request a duel with the same person!");
+								ChatHandler(target->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou cannot request a duel with the same person!");
 						}
 						else
-							ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou cannot request a duel with somebody that has challenged you!");
+							ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou cannot request a duel with somebody that has challenged you!");
 						player->CLOSE_GOSSIP_MENU();
 						return true;
 					}
@@ -247,13 +247,13 @@ class npc_blood_money : public CreatureScript
 						uint32 money = action*10000;
 						if (target->GetMoney() < money)
 						{
-							ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFThat player does not have enough money to make the bet!");
+							ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFThat player does not have enough money to make the bet!");
 							player->CLOSE_GOSSIP_MENU();
 							return false;
 						}
 						if (player->GetMoney() < money)
 						{
-							ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou do not have enough money to make the bet!");
+							ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou do not have enough money to make the bet!");
 							player->CLOSE_GOSSIP_MENU();
 							return false;
 						}
@@ -276,10 +276,10 @@ class npc_blood_money : public CreatureScript
 								creature->MonsterWhisper(msg, target->GetGUID(), true);
 							}
 							else
-								ChatHandler(target->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou cannot request a duel with the same person!");
+								ChatHandler(target->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou cannot request a duel with the same person!");
 						}
 						else
-							ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou cannot request a duel with somebody that has challenged you!");
+							ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou cannot request a duel with somebody that has challenged you!");
 						player->CLOSE_GOSSIP_MENU();
 						return true;
 					}
@@ -287,21 +287,21 @@ class npc_blood_money : public CreatureScript
 				}
 				else
 				{
-					ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFThat player is not in your zone!");
+					ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFThat player is not in your zone!");
 					player->CLOSE_GOSSIP_MENU();
 					return false;
 				}
 			}
 			else
 			{
-				ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFThat player was not found!");
+				ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFThat player was not found!");
 				player->CLOSE_GOSSIP_MENU();
 				return false;
 			}
 		}
 		else
 		{
-			ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFThat player was not found!");
+			ChatHandler(player->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFThat player was not found!");
 			player->CLOSE_GOSSIP_MENU();
 			return false;
 		}
@@ -333,15 +333,15 @@ class BloodMoneyReward : public PlayerScript
 						if (winner->GetItemCount(TOKEN_ID) < itr->amount)
 						{
 							winner->AddAura(15007, winner);		// Apply Rez sickness for possible cheating
-							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
-							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYour opponent tried to cheat you. Don't worry you did not lose any tokens because of this.");
+							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
+							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYour opponent tried to cheat you. Don't worry you did not lose any tokens because of this.");
 							RemoveBloodMoneyEntry(winner->GetGUID(), itr->guid);
 							return;
 						}
 						if (loser->GetItemCount(TOKEN_ID) >= itr->amount)
 						{
 							winner->AddItem(TOKEN_ID, itr->amount);
-							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFCongratulations on winning %d tokens!", itr->amount);
+							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFCongratulations on winning %d tokens!", itr->amount);
 							Item* item = loser->GetItemByEntry(TOKEN_ID);
 							loser->DestroyItemCount(TOKEN_ID, itr->amount, true);
 							RemoveBloodMoneyEntry(winner->GetGUID(), itr->guid);
@@ -349,8 +349,8 @@ class BloodMoneyReward : public PlayerScript
 						else
 						{
 							loser->AddAura(15007, loser);		// Apply Rez sickness for possible cheating
-							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYour opponent tried to cheat you. He did not have enough tokens to pay off the bet.");
-							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
+							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYour opponent tried to cheat you. He did not have enough tokens to pay off the bet.");
+							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
 							RemoveBloodMoneyEntry(winner->GetGUID(), itr->guid);
 						}
 						return;
@@ -360,23 +360,23 @@ class BloodMoneyReward : public PlayerScript
 						if (winner->GetMoney() < itr->amount)
 						{
 							winner->AddAura(15007, winner);		// Apply Rez sickness for possible cheating
-							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
-							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYour opponent tried to cheat you. Don't worry you did not lose any money because of this.");
+							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
+							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYour opponent tried to cheat you. Don't worry you did not lose any money because of this.");
 							RemoveBloodMoneyEntry(winner->GetGUID(), itr->guid);
 							return;
 						}
 						if (loser->GetMoney() >= itr->amount)
 						{
 							winner->ModifyMoney(itr->amount);
-							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFCongratulations on winning %dg!", itr->amount/10000);
+							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFCongratulations on winning %dg!", itr->amount/10000);
 							loser->ModifyMoney(-(int32)(itr->amount));
 							RemoveBloodMoneyEntry(winner->GetGUID(), itr->guid);
 						}
 						else
 						{
 							loser->AddAura(15007, loser);		// Apply Rez sickness for possible cheating
-							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYour opponent tried to cheat you. He did not have enough money to pay off the bet.");
-							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
+							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYour opponent tried to cheat you. He did not have enough money to pay off the bet.");
+							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
 							RemoveBloodMoneyEntry(winner->GetGUID(), itr->guid);
 						}
 						return;
@@ -392,15 +392,15 @@ class BloodMoneyReward : public PlayerScript
 						if (winner->GetItemCount(TOKEN_ID) < itr->amount)
 						{
 							winner->AddAura(15007, winner);		// Apply Rez sickness for possible cheating
-							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
-							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYour opponent tried to cheat you. Don't worry you did not lose any tokens because of this.");
+							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
+							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYour opponent tried to cheat you. Don't worry you did not lose any tokens because of this.");
 							RemoveBloodMoneyEntry(loser->GetGUID(), itr->guid);
 							return;
 						}
 						if (loser->GetItemCount(TOKEN_ID) >= itr->amount)
 						{
 							winner->AddItem(TOKEN_ID, itr->amount);
-							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFCongratulations on winning %d tokens!", itr->amount);
+							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFCongratulations on winning %d tokens!", itr->amount);
 							Item* item = loser->GetItemByEntry(TOKEN_ID);
 							loser->DestroyItemCount(TOKEN_ID, itr->amount, true);
 							RemoveBloodMoneyEntry(loser->GetGUID(), itr->guid);
@@ -408,8 +408,8 @@ class BloodMoneyReward : public PlayerScript
 						else
 						{
 							loser->AddAura(15007, loser);		// Apply Rez sickness for possible cheating
-							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYour opponent tried to cheat you. He did not have enough tokens to pay off the bet.");
-							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
+							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYour opponent tried to cheat you. He did not have enough tokens to pay off the bet.");
+							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
 							RemoveBloodMoneyEntry(loser->GetGUID(), itr->guid);
 						}
 						return;
@@ -419,23 +419,23 @@ class BloodMoneyReward : public PlayerScript
 						if (winner->GetMoney() < itr->amount)
 						{
 							winner->AddAura(15007, winner);		// Apply Rez sickness for possible cheating
-							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
-							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYour opponent tried to cheat you. Don't worry you did not lose any money because of this.");
+							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
+							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYour opponent tried to cheat you. Don't worry you did not lose any money because of this.");
 							RemoveBloodMoneyEntry(loser->GetGUID(), itr->guid);
 							return;
 						}
 						if (loser->GetMoney() >= itr->amount)
 						{
 							winner->ModifyMoney(itr->amount);
-							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFCongratulations on winning %dg!", itr->amount/10000);
+							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFCongratulations on winning %dg!", itr->amount/10000);
 							loser->ModifyMoney(-(int32)(itr->amount));
 							RemoveBloodMoneyEntry(loser->GetGUID(), itr->guid);
 						}
 						else
 						{
 							loser->AddAura(15007, loser);		// Apply Rez sickness for possible cheating
-							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYour opponent tried to cheat you. He did not have enough money to pay off the bet.");
-							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[Blood Money] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
+							ChatHandler(winner->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYour opponent tried to cheat you. He did not have enough money to pay off the bet.");
+							ChatHandler(loser->GetSession()).PSendSysMessage("|cff800C0C[VFire Money Duel] |cffFFFFFFYou have gained Resurrection Sickness for possibly trying to abuse the system.");
 							RemoveBloodMoneyEntry(loser->GetGUID(), itr->guid);
 						}
 						return;

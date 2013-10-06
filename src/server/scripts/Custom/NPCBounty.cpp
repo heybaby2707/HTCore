@@ -459,10 +459,15 @@ class BountyKills : public PlayerScript
 				break;
 			}
 #endif
-			CharacterDatabase.PExecute("DELETE FROM bounties WHERE guid='%u'", killed->GetGUID());
+			QueryResult kname = CharacterDatabase.PQuery("SELECT name FROM characters WHERE guid='%u'", killed->GetGUID());
+			Field * knames = kname->Fetch();
 			//alertServer(killed->GetName(), 2);
-			// Need Opt
-			sWorld->SendServerMessage(SERVER_MSG_STRING, "|cffff0000One bounty |cffFFFF00 |cffff0000has been collected. Please recheck bounty list!", 0);
+			std::string mess;
+			mess = "|cffff0000The bounty on|cffFFFF00 ";
+			mess += knames[0].GetString();
+			mess += " |cffff0000has been collected!";
+			sWorld->SendServerMessage(SERVER_MSG_STRING, mess.c_str(), 0);
+			CharacterDatabase.PExecute("DELETE FROM bounties WHERE guid='%u'", killed->GetGUID());
 		}
 };
 
