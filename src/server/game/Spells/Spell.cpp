@@ -1463,6 +1463,9 @@ void Spell::SelectImplicitCasterDestTargets(SpellEffIndex effIndex, SpellImplici
 void Spell::SelectImplicitTargetDestTargets(SpellEffIndex effIndex, SpellImplicitTargetInfo const& targetType)
 {
     WorldObject* target = m_targets.GetObjectTarget();
+	if (!target)
+		return;
+
     switch (targetType.GetTarget())
     {
         case TARGET_DEST_TARGET_ENEMY:
