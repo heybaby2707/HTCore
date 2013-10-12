@@ -721,6 +721,20 @@ public:
         return new npc_salanar_the_horsemanAI(creature);
     }
 
+	bool OnQuestReward(Player* player, Creature* creature, Quest const* quest, uint32 opt)
+	{
+		if(quest->GetQuestId() == 12687)
+		{
+			if(!player->HasSpell(48778))
+			{
+				player->learnSpell(33391,false);
+				player->learnSpell(48778,false);
+			}
+			
+		}
+		return true;
+	}
+
     struct npc_salanar_the_horsemanAI : public ScriptedAI
     {
         npc_salanar_the_horsemanAI(Creature* creature) : ScriptedAI(creature) {}
