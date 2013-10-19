@@ -1018,18 +1018,27 @@ public:
         if (location_str == "inn")
         {
             player->TeleportTo(player->m_homebindMapId, player->m_homebindX, player->m_homebindY, player->m_homebindZ, player->GetOrientation());
+			player->ResurrectPlayer(!AccountMgr::IsPlayerAccount(player->GetSession()->GetSecurity()) ? 1.0f : 0.5f);
+			player->SpawnCorpseBones();
+            player->SaveToDB();
             return true;
         }
 
         if (location_str == "graveyard")
         {
             player->RepopAtGraveyard();
+			player->ResurrectPlayer(!AccountMgr::IsPlayerAccount(player->GetSession()->GetSecurity()) ? 1.0f : 0.5f);
+			player->SpawnCorpseBones();
+            player->SaveToDB();
             return true;
         }
 
         if (location_str == "startzone")
         {
             player->TeleportTo(player->GetStartPosition());
+			player->ResurrectPlayer(!AccountMgr::IsPlayerAccount(player->GetSession()->GetSecurity()) ? 1.0f : 0.5f);
+			player->SpawnCorpseBones();
+            player->SaveToDB();
             return true;
         }
 
