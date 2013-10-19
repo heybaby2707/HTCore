@@ -2389,6 +2389,7 @@ public:
 
     bool OnQuestAccept(Player* player, Creature* creature, Quest const*_Quest)
     {
+		/*
         if (_Quest->GetQuestId() == QUEST_SACRIFICES)
         {
             if (Creature *horse = player->SummonCreature(35231, player->GetPositionX(), player->GetPositionY(),  player->GetPositionZ(),  player->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN))
@@ -2397,6 +2398,30 @@ public:
                 CAST_AI(npc_escortAI, (horse->AI()))->Start(false, true, player->GetGUID(), _Quest);
             }
         }
+		*/
+		for (int i = 0; i < 30; i++)
+			player->KilledMonsterCredit(51277, 0);
+
+        player->TeleportTo(638, -1550.76f, 1565.98f, 29.57f, 0.70f);
+        return true;
+    }
+};
+
+/*######
+## npc_tobias_mistmantle_q14218
+######*/
+class npc_tobias_mistmantle_q14218 : public CreatureScript
+{
+public:
+    npc_tobias_mistmantle_q14218() : CreatureScript("npc_tobias_mistmantle_q14218") { }
+
+    bool OnQuestAccept(Player* player, Creature* creature, Quest const* worgen_bquest)
+    {
+		if (worgen_bquest->GetQuestId() == 14218)
+		{
+			for (int i = 0; i < 40; i++)
+				player->KilledMonsterCredit(35229, 0);
+		}
         return true;
     }
 };
@@ -4196,6 +4221,23 @@ public:
 	}
 };
 
+class npc_lorna_crowney_q24904: public CreatureScript
+{
+public:
+    npc_lorna_crowney_q24904() : CreatureScript("npc_lorna_crowney_q24904") {}
+
+    bool OnQuestAccept(Player* player, Creature* creature, Quest const* worgen_cquest)
+    {
+		if (worgen_cquest->GetQuestId() == 24904)
+		{
+			CreatureTemplate const* cInfo1 = sObjectMgr->GetCreatureTemplate(38854);
+			player->KilledMonster(cInfo1, 0);
+			player->TeleportTo(654, -1661.29f, 1590.12f, 23.13f, 2.99f);
+		}
+        return true;
+    }
+};
+
 void AddSC_gilneas()
 {
 	new spell_attack_lurker();
@@ -4252,4 +4294,7 @@ void AddSC_gilneas()
     new npc_chauve_souris_capture();
 	new npc_commandeered_cannon();
 	new npc_lord_godfrey_p4_8();
+	
+	new npc_lorna_crowney_q24904;
+	new npc_tobias_mistmantle_q14218;
 }
