@@ -380,16 +380,21 @@ void AddSC_instance_firelands();
 void AddSC_boss_alysrazor();
 void AddSC_boss_ragnaros_cata();
 void AddSC_firelands();
-void AddSC_boss_grand_vizier_ertan();      //Vortex Pinnacle
+void AddSC_boss_grand_vizier_ertan();      		// Vortex Pinnacle
 void AddSC_boss_asaad();
 void AddSC_instance_the_vortex_pinnacle();
 void AddSC_boss_altairus();
 void AddSC_vortex_pinnacle();
-void AddSC_boss_alakir();                        // Throne of the four Winds
+void AddSC_boss_alakir();                       // Throne of the four Winds
 void AddSC_boss_conclave_of_wind();
 void AddSC_instance_throne_of_the_four_winds();
 void AddSC_throne_of_the_four_winds();
+void AddSC_instance_endtime();					// End Time
 void AddSC_endtime();
+void AddSC_endtime_teleporter();
+void AddSC_boss_echo_of_baine();
+void AddSC_boss_echo_of_jaina();
+void AddSC_boss_echo_of_sylvanas();
 
 void AddSC_ashenvale();
 void AddSC_azshara();
@@ -1107,7 +1112,7 @@ void AddKalimdorScripts()
     AddSC_instance_wailing_caverns();
     AddSC_zulfarrak();                      //Zul'Farrak generic
     AddSC_instance_zulfarrak();             //Zul'Farrak instance script
-    AddSC_boss_grand_vizier_ertan();      //Vortex Pinnacle
+    AddSC_boss_grand_vizier_ertan();      		// Vortex Pinnacle
     AddSC_boss_asaad();
     AddSC_instance_the_vortex_pinnacle();
     AddSC_boss_altairus();
@@ -1116,7 +1121,12 @@ void AddKalimdorScripts()
     AddSC_boss_conclave_of_wind();
     AddSC_instance_throne_of_the_four_winds();
     AddSC_throne_of_the_four_winds();
-    AddSC_endtime();
+	AddSC_instance_endtime();					// End Time
+	AddSC_endtime();
+	AddSC_endtime_teleporter();
+	AddSC_boss_echo_of_baine();
+	AddSC_boss_echo_of_jaina();
+	AddSC_boss_echo_of_sylvanas();
 
     AddSC_ashenvale();
     AddSC_azshara();
