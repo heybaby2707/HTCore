@@ -2102,6 +2102,7 @@ public:
     {
 		if (goblin_aquest->GetQuestId() == 14126)
         {
+			player->RemoveAllAuras();
             player->TeleportTo(648, 534.39f, 3274.37f, 1.03f, 5.17f);
         }
         return true;
@@ -2119,6 +2120,13 @@ public:
         {
             for (int i = 0; i < 12; i++)
 				player->KilledMonsterCredit(35200, 0);
+        }
+
+		if (goblin_bquest->GetQuestId() == 14126)
+        {
+			player->RemoveAllAuras();
+			//player->ToPlayer()->GetPhaseMgr().SetCustomPhase(1);
+            player->TeleportTo(1, 1569.97f, -4397.41f, 16.0472f, 0.543025f);
         }
         return true;
     }

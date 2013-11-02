@@ -4238,6 +4238,22 @@ public:
     }
 };
 
+class npc_lorna_crowley_q26706: public CreatureScript
+{
+public:
+    npc_lorna_crowley_q26706() : CreatureScript("npc_lorna_crowley_q26706") {}
+
+    bool OnQuestAccept(Player* player, Creature* creature, Quest const* worgen_dquest)
+    {
+		if (worgen_dquest->GetQuestId() == 26706)
+		{
+			player->RemoveAllAuras();
+			player->TeleportTo(0, -8833.07f, 622.778f, 93.9317f, 0.6771f);
+		}
+        return true;
+    }
+};
+
 void AddSC_gilneas()
 {
 	new spell_attack_lurker();
@@ -4295,6 +4311,7 @@ void AddSC_gilneas()
 	new npc_commandeered_cannon();
 	new npc_lord_godfrey_p4_8();
 	
-	new npc_lorna_crowney_q24904;
-	new npc_tobias_mistmantle_q14218;
+	new npc_lorna_crowney_q24904();
+	new npc_tobias_mistmantle_q14218();
+	new npc_lorna_crowley_q26706();
 }
