@@ -24,7 +24,7 @@
 #include "Define.h"
 #include "revision.h"
 
-#define _PACKAGENAME "HTCore"
+#define _PACKAGENAME "VFCore"
 
 #if TRINITY_ENDIAN == TRINITY_BIGENDIAN
 # define _ENDIAN_STRING "big-endian"
@@ -34,11 +34,11 @@
 
 #if PLATFORM == PLATFORM_WINDOWS
 # ifdef _WIN64
-#  define _FULLVERSION _PACKAGENAME " rev 2013.x "  " (Win64, "_BUILD_DIRECTIVE ")"
+#  define _FULLVERSION _PACKAGENAME " rev 2013.11 "  " (Win64, "_BUILD_DIRECTIVE ")"
 # else
-#  define _FULLVERSION _PACKAGENAME " rev 2013.x "  " (Win32, " _BUILD_DIRECTIVE ")"
+#  define _FULLVERSION _PACKAGENAME " rev 2013.11 "  " (Win32, " _BUILD_DIRECTIVE ")"
 # endif
 #else
-#  define _FULLVERSION _PACKAGENAME " rev 2013.x "  " (Unix, " _BUILD_DIRECTIVE ")"
+#  define _FULLVERSION _PACKAGENAME " rev 2013.11 "  " (Unix, " _BUILD_DIRECTIVE ")"
 #endif
 #endif
