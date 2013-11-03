@@ -368,7 +368,8 @@ public:
                 me->SetDisplayId(DISPLAYID_EYE_HUGE);
                 me->SetHomePosition(2361.21f, -5660.45f, 496.7444f, 0);
                 me->GetMotionMaster()->MoveCharge(2361.21f, -5660.45f, 496.7444f, 0.0f); // Position center                
-                if (Player* player = me->GetCharmerOrOwnerPlayerOrPlayerItself())
+                me->SetSpeed(MOVE_FLIGHT, 6.5f, true);
+				if (Player* player = me->GetCharmerOrOwnerPlayerOrPlayerItself())
                 Talk(EMOTE_DESTINATION);
                 
                 me->SetReactState(REACT_AGGRESSIVE);
@@ -1205,6 +1206,21 @@ public:
 
 };
 
+class npc_prince_valanar_q12701: public CreatureScript
+{
+public:
+    npc_prince_valanar_q12701() : CreatureScript("npc_prince_valanar_q12701") {}
+
+    bool OnQuestAccept(Player* player, Creature* creature, Quest const* dk_aquest)
+    {
+		if (dk_aquest->GetQuestId() == 12701)
+		{
+			player->TeleportTo(609, 2110.8f, -6181.86f, 13.47f, 1.484f);
+		}
+        return true;
+    }
+};
+
 // npc 28912 quest 17217 boss 29001 mob 29007 go 191092
 
 void AddSC_the_scarlet_enclave_c1()
@@ -1222,4 +1238,5 @@ void AddSC_the_scarlet_enclave_c1()
     new npc_scarlet_miner();
     new npc_scarlet_miner_cart();
     new go_inconspicuous_mine_car();
+	new npc_prince_valanar_q12701();
 }
