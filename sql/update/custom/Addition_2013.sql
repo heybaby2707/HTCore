@@ -45,6 +45,8 @@ DELETE FROM `creature` WHERE `id`=54659;
 
 
 -- Dungeon/Raid disables
+DELETE FROM `creature` WHERE `id`=111222;
+-- DELETE FROM `gameobject` WHERE `guid`=11363;
 DELETE FROM `disables` WHERE `entry` IN (36,33,645,938,670,644,940,755,725,657,643,939,568,757,669,967,720,671,754);
 INSERT INTO `disables` VALUES ('2', '36', '2', '', '', 'Dungeon: The Deadmines');
 INSERT INTO `disables` VALUES ('2', '33', '2', '', '', 'Dungeon: Shadowfang Keep');
