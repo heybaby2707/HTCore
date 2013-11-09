@@ -4254,6 +4254,21 @@ public:
     }
 };
 
+class npc_king_genn_greymane_q24438: public CreatureScript
+{
+public:
+    npc_king_genn_greymane_q24438() : CreatureScript("npc_king_genn_greymane_q24438") {}
+
+    bool OnQuestAccept(Player* player, Creature* creature, Quest const* worgen_equest)
+    {
+		if (worgen_equest->GetQuestId() == 24438)
+		{
+			player->TeleportTo(654, -2218.05f, 1809.99f, 12.47f, 3.134f);
+		}
+        return true;
+    }
+};
+
 void AddSC_gilneas()
 {
 	new spell_attack_lurker();
@@ -4314,4 +4329,5 @@ void AddSC_gilneas()
 	new npc_lorna_crowney_q24904();
 	new npc_tobias_mistmantle_q14218();
 	new npc_lorna_crowley_q26706();
+	new npc_king_genn_greymane_q24438();
 }
