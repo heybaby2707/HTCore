@@ -3267,6 +3267,9 @@ void SpellMgr::LoadSpellInfoCorrections()
             case 28200: // Ascendance (Talisman of Ascendance trinket)
                 spellInfo->ProcCharges = 6;
                 break;
+			case 47198: // Death's Embrace
+            case 47199:
+            case 47200:
             case 47201: // Everlasting Affliction
             case 47202:
             case 47203:
