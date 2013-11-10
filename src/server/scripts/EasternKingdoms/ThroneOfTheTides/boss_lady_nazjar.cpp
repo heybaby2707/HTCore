@@ -155,7 +155,7 @@ public:
             }
         }
 
-        void UpdateAI(uint32 Diff)
+        void UpdateAI(const uint32 Diff)
         {
             if (!UpdateVictim())
                 return;

@@ -145,7 +145,7 @@ class boss_anshal : public CreatureScript
                 return NULL;
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
                 if (!UpdateVictim())
                     return;
@@ -218,7 +218,7 @@ class boss_nezir : public CreatureScript
                     summoned->CastSpell(summoned, SPELL_NEZIR_ICE_PATCH, true);
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
                 if (!UpdateVictim())
                     return;
@@ -291,7 +291,7 @@ class boss_rohash : public CreatureScript
                     summoned->CastSpell(summoned, SPELL_ROHASH_TORNADO, true);
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
                 if (!UpdateVictim())
                     return;

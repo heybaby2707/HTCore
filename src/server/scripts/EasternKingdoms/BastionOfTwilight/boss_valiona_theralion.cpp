@@ -194,7 +194,7 @@ class boss_valiona : public CreatureScript
             }
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if (!UpdateVictim())
                 return;
@@ -397,7 +397,7 @@ class boss_theralion : public CreatureScript
             ScriptedAI::EnterEvadeMode();
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if (!UpdateVictim())
                 return;
@@ -525,7 +525,7 @@ class npc_twilight_fiend : public CreatureScript
                 instance->SetData(DATA_DOUBLE_DRAGON, DATA_ACCUMULATE);
         }
 
-        void UpdateAI(uint32 /*diff*/)
+        void UpdateAI(const uint32 /*diff*/)
         {
         }
     };

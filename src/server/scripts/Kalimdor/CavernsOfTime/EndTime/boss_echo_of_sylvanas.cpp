@@ -236,7 +236,7 @@ public:
             _events.ScheduleEvent(EVENT_DESPAWN, 18000, 0, ON_COMBAT);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             _events.Update(diff);
 
@@ -285,7 +285,7 @@ public:
             _events.ScheduleEvent(EVENT_INTRO_NOZDORMU_1, 2500);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             _events.Update(diff);
 

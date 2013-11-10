@@ -40,7 +40,7 @@ public:
         }
 
         //Timed events
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             //Out of combat
             if (!me->getVictim())
@@ -132,7 +132,7 @@ public:
                 ++dmgCount;
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             //If creature has no target
             if (!UpdateVictim())
@@ -1753,7 +1753,7 @@ public:
             tEvent      = 0;
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if (Creature* Lorna = me->FindNearestCreature(NPC_LORNA_CROWLEY_P4, 60.0f, true))
             if (Creature* BadAvery = me->FindNearestCreature(NPC_JOSIAH_AVERY_P4, 80.0f, true))
@@ -1865,7 +1865,7 @@ public:
         }
 
         //Timed events
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             //Out of combat
             if (!me->getVictim())
@@ -1954,7 +1954,7 @@ public:
             me->GetCharmInfo()->SetIsFollowing(true);
         }
 
-        void UpdateAI(uint32 diff) /*diff*/
+        void UpdateAI(const uint32 diff) /*diff*/
         {
             Player* player = me->GetOwner()->ToPlayer();
 
@@ -2024,7 +2024,7 @@ public:
             DoCast(me, SPELL_SHADOWSTALKER_STEALTH);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if (tSeek <= diff)
             {
@@ -2135,7 +2135,7 @@ public:
             }
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if (tSay <= diff) // Time for next spawn wave
             {

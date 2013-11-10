@@ -69,6 +69,3 @@ INSERT INTO `disables` VALUES ('2', '720', '15', '', '', 'Raid: Firelands');
 INSERT INTO `disables` VALUES ('2', '671', '15', '', '', 'Raid: The Bastion of Twilight');
 INSERT INTO `disables` VALUES ('2', '754', '15', '', '', 'Raid: Throne of the Four Winds');
 
--- Portal Worgen Start Zone
-DELETE FROM `gameobject` WHERE `id`=56782;
-

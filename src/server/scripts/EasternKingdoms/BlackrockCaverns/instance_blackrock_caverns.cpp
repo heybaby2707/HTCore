@@ -99,7 +99,7 @@ class npc_raz_the_crazed : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 /*diff*/)
+            void UpdateAI(const uint32 /*diff*/)
             {
                 if (!UpdateVictim())
                     return;
@@ -400,7 +400,7 @@ public:
             GougeTimer = urand(6000, 16000);
         }
 
-        void UpdateAI(uint32 Diff)
+        void UpdateAI(const uint32 Diff)
         {
             if (!UpdateVictim())
                 return;

@@ -111,7 +111,7 @@ public:
                 instance->SetData(BOSS_ASCENDANT_LORD_OBSIDIUS, IN_PROGRESS);
         }
 
-        void UpdateAI(uint32 Diff)
+        void UpdateAI(const uint32 Diff)
         {
             if (!UpdateVictim())
                 return;

@@ -90,7 +90,7 @@ class npc_harbinger_legendary : public CreatureScript
             _events.ScheduleEvent(EVENT_FIEROCLAST_BARRAGE, 5000);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if(!UpdateVictim())
                 return;
@@ -160,7 +160,7 @@ class npc_tormented_protector : public CreatureScript
             }
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if(!UpdateVictim())
                 return;

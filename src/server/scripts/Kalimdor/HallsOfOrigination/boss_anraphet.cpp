@@ -139,7 +139,7 @@ class boss_anraphet : public CreatureScript
             BossAI::JustDied(killer);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if(intro)
             {
@@ -261,7 +261,7 @@ class npc_air_warden_hoo : public CreatureScript
                 instance->SetData(DATA_AIR_WARDEN, DONE);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if(!UpdateVictim())
                 return;
@@ -367,7 +367,7 @@ class npc_whirling_winds_hoo : public CreatureScript
             }
         }
 
-        void UpdateAI(uint32 /*diff*/)
+        void UpdateAI(const uint32 /*diff*/)
         {
         }
 
@@ -414,7 +414,7 @@ class npc_earth_warden_hoo : public CreatureScript
                 instance->SetData(DATA_EARTH_WARDEN, DONE);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if(!rockWave && !UpdateVictim())
                 return;
@@ -502,7 +502,7 @@ class npc_flame_warden_hoo : public CreatureScript
                     instance->SetData(DATA_FLAME_WARDEN, 1);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if(!UpdateVictim())
                 return;
@@ -611,7 +611,7 @@ class npc_water_warden_hoo : public CreatureScript
             DoCast(me, SPELL_AQUA_BOMB_AURA, true);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if(!UpdateVictim())
                 return;
@@ -678,7 +678,7 @@ class npc_water_bubble_hoo : public CreatureScript
             me->DespawnOrUnsummon(20000);
         }
 
-        void UpdateAI(uint32 /*diff*/)
+        void UpdateAI(const uint32 /*diff*/)
         {
             /*if(checkTimer <= diff)
             {
@@ -752,7 +752,7 @@ class npc_brann_bronzebeard_hoo : public CreatureScript
             }
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if(!EventInProgress)
                 return;

@@ -566,7 +566,7 @@ public:
             }
         }
 
-        void DoAction(int32 action)
+        void DoAction(const int32 action)
         {
             switch (action)
             {
@@ -590,7 +590,7 @@ public:
             }
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if (!(events.IsInPhase(PHASE_INTRO)))
                 if (!UpdateVictim())
@@ -828,7 +828,7 @@ class npc_magma_trap : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
                 events.Update(diff);
 
@@ -890,7 +890,7 @@ class npc_sulfuras_smash : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
                 events.Update(diff);
 
@@ -945,7 +945,7 @@ class npc_fl_lava_wave : public CreatureScript
                 me->SetSpeed(MOVE_RUN, 2.0f);
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
                 events.Update(diff);
 
@@ -1002,7 +1002,7 @@ class npc_sulfuras_hammer : public CreatureScript // Temphack until dest area ef
                 }
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
                 events.Update(diff);
 
@@ -1088,7 +1088,7 @@ class npc_son_of_flame : public CreatureScript
                 }
             }
 
-            void DoAction(int32 action)
+            void DoAction(const int32 action)
             {
                 switch (action)
                 {
@@ -1108,7 +1108,7 @@ class npc_son_of_flame : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
                 events.Update(diff);
 
@@ -1145,7 +1145,7 @@ class npc_engulfing_flame : public CreatureScript
             {
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
             }
         };
@@ -1179,7 +1179,7 @@ class npc_fl_molten_elemental : public CreatureScript
                 events.ScheduleEvent(EVENT_ACTIVATE, 10000);
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
                 events.Update(diff);
 
@@ -1240,7 +1240,7 @@ class npc_fl_lava_scion : public CreatureScript
                 events.ScheduleEvent(EVENT_BLAZING_HEAT, 12000);
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
                 events.Update(diff);
 
@@ -1293,7 +1293,7 @@ class npc_fl_blazing_heat : public CreatureScript
                 DoCastAOE(SPELL_BLAZING_HEAT_DAMAGE_AURA);
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
             }
         };
@@ -1334,7 +1334,7 @@ class npc_fl_living_meteor : public CreatureScript
                 }
             }
 
-            void UpdateAI(uint32 diff)
+            void UpdateAI(const uint32 diff)
             {
                 events.Update(diff);
 

@@ -208,7 +208,7 @@ public:
             // me->MonsterSay(SAY_1,LANG_UNIVERSAL,NULL);
         }
 
-        void UpdateAI(uint32 diff)
+        void UpdateAI(const uint32 diff)
         {
             if (!isEncounterStarted || phase == PHASE_OZUMAT_FIGHT)
                 return;

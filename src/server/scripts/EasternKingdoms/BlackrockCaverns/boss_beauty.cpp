@@ -91,7 +91,7 @@ public:
             }
         }
 
-        void UpdateAI(uint32 Diff)
+        void UpdateAI(const uint32 Diff)
         {
             if (!UpdateVictim())
                 return;
@@ -198,7 +198,7 @@ public:
                     beauty->CastSpell(beauty, SPELL_BERSKER, true);
         }
 
-        void UpdateAI(uint32 Diff)
+        void UpdateAI(const uint32 Diff)
         {
             if (!UpdateVictim())
                 return;
