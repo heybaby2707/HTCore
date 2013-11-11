@@ -9,14 +9,12 @@ DELETE FROM `creature` WHERE `id`=51495;
 DELETE FROM `creature` WHERE `id`=51504;
 -- Orgrimmar
 DELETE FROM `creature` WHERE `id`=46572;
-
 -- Undercity
 DELETE FROM `creature` WHERE `id`=51496;
 -- Silvermoon City
 DELETE FROM `creature` WHERE `id`=51502;
 -- Thunder Bluff
 DELETE FROM `creature` WHERE `id`=51503;
-
 -- Shattrath City
 DELETE FROM `creature` WHERE `id`=52268;
 -- Dalaran
@@ -34,14 +32,12 @@ INSERT INTO `creature` (`guid`,`id`,`map`,`zone`,`area`,`spawnMask`,`phaseMask`,
 (1409000, 52028, 0, 1519, 1519, 1, 3969, 0, 0, -8808.23, 350.682, 107.049, 4.65195, 300, 0, 0, 1830, 5013, 0, 0, 0, 0);
 DELETE FROM `creature` WHERE `id`=52546;
 DELETE FROM `creature` WHERE `id`=51256;
-
 -- Orgimmar
 DELETE FROM `creature` WHERE `id`=60001;
 DELETE FROM `creature` WHERE `id`=46593;
 DELETE FROM `creature` WHERE `id`=52549;
 DELETE FROM `creature` WHERE `id`=54658;
 DELETE FROM `creature` WHERE `id`=54659;
-
 
 
 -- Dungeon/Raid disables
@@ -69,3 +65,14 @@ INSERT INTO `disables` VALUES ('2', '720', '15', '', '', 'Raid: Firelands');
 INSERT INTO `disables` VALUES ('2', '671', '15', '', '', 'Raid: The Bastion of Twilight');
 INSERT INTO `disables` VALUES ('2', '754', '15', '', '', 'Raid: Throne of the Four Winds');
 
+-- Crash by item in Dungeon: The Oculus
+DELETE FROM `character_inventory` WHERE `item` IN 
+(
+	SELECT `guid` FROM `item_instance` WHERE `itemEntry` IN (37815,37859,37860)
+);
+DELETE FROM `item_instance` WHERE `itemEntry` IN (37815,37859,37860);
+DELETE FROM `creature_loot_template` WHERE `item` IN (37815,37859,37860);
+
+-- Change Justice Point and Conquest Point Reward
+UPDATE `creature_onkill_reward` SET `CurrencyCount1`=`CurrencyCount1` / 2 WHERE `CurrencyId1` = 395;
+UPDATE `creature_onkill_reward` SET `CurrencyCount1`=`CurrencyCount1` / 2 WHERE `CurrencyId1` = 396;
