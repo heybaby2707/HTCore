@@ -1,6 +1,6 @@
--- Blackrock Caverns
--- Rom'ogg Bonecrusher
-UPDATE `creature_template` SET `maxlevel`=87 WHERE `entry`=39665;
+-- The Stonecore
+-- Corborus
+UPDATE `creature_template` SET `minlevel`=84, `maxlevel`=87 WHERE `entry`=39665;
 DELETE FROM `creature_loot_template` WHERE (`entry`=39665);
 INSERT INTO `creature_loot_template` VALUES 
 (39665, 55777, 26, 1, 0, 1, 1),
@@ -96,24 +96,4 @@ INSERT INTO `creature_loot_template` VALUES
 (39706, 56318, 19, 1, 0, 1, 1),
 (39706, 56315, 19, 1, 0, 1, 1),
 (39706, 56321, 19, 1, 0, 1, 1);
--- Trash
-UPDATE `creature_template` SET `Health_mod`=5 WHERE `entry`=39708;
-UPDATE `creature_template` SET `Health_mod`=13 WHERE `entry`=39709;
-UPDATE `creature_template` SET `Health_mod`=5 WHERE `entry`=39978;
-UPDATE `creature_template` SET `Health_mod`=13 WHERE `entry`=39979;
-UPDATE `creature_template` SET `Health_mod`=5 WHERE `entry`=39980;
-UPDATE `creature_template` SET `Health_mod`=13 WHERE `entry`=39981;
-UPDATE `creature_template` SET `Health_mod`=5 WHERE `entry`=39982;
-UPDATE `creature_template` SET `Health_mod`=13 WHERE `entry`=39983;
-UPDATE `creature_template` SET `Health_mod`=12 WHERE `entry`=39987;
-UPDATE `creature_template` SET `Health_mod`=15 WHERE `entry`=39988;
-UPDATE `creature_template` SET `Health_mod`=5, `difficulty_entry_1`=39991, `ScriptName`='' WHERE `entry`=39990;
-UPDATE `creature_template` SET `Health_mod`=13, `lootid`=39991 WHERE `entry`=39991;
-UPDATE `creature_template` SET `Health_mod`=8 WHERE `entry`=39994;
-UPDATE `creature_template` SET `Health_mod`=13 WHERE `entry`=39995;
-UPDATE `creature_template` SET `Health_mod`=1, `difficulty_entry_1`=40085 WHERE `entry`=40084;
-UPDATE `creature_template` SET `Health_mod`=2 WHERE `entry`=40085;
-UPDATE `creature_template` SET `Health_mod`=7 WHERE `entry`=40817;
-UPDATE `creature_template` SET `Health_mod`=16 WHERE `entry`=40818;
-UPDATE `creature_template` SET `Health_mod`=4 WHERE `entry`=50284;
-UPDATE `creature_template` SET `Health_mod`=8 WHERE `entry`=50285;
+
