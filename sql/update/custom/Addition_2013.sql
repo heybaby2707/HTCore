@@ -43,9 +43,9 @@ DELETE FROM `creature` WHERE `id`=54659;
 -- Dungeon/Raid disables
 DELETE FROM `creature` WHERE `id`=111222;
 -- DELETE FROM `gameobject` WHERE `guid`=11363;
-DELETE FROM `disables` WHERE `entry` IN (36,33,645,938,670,644,940,755,725,657,643,939,568,757,669,967,720,671,754);
-INSERT INTO `disables` VALUES ('2', '36', '2', '', '', 'Dungeon: The Deadmines');
-INSERT INTO `disables` VALUES ('2', '33', '2', '', '', 'Dungeon: Shadowfang Keep');
+DELETE FROM `disables` WHERE `entry` IN (36,33,645,938,670,644,940,755,725,657,643,939,568,859,757,669,967,720,671,754);
+INSERT INTO `disables` VALUES ('2', '36', '3', '', '', 'Dungeon: The Deadmines');
+INSERT INTO `disables` VALUES ('2', '33', '3', '', '', 'Dungeon: Shadowfang Keep');
 INSERT INTO `disables` VALUES ('2', '645', '3', '', '', 'Dungeon: Blackrock Caverns');
 INSERT INTO `disables` VALUES ('2', '938', '3', '', '', 'Dungeon: End Time');
 INSERT INTO `disables` VALUES ('2', '670', '3', '', '', 'Dungeon: Grim Batol');
@@ -66,11 +66,6 @@ INSERT INTO `disables` VALUES ('2', '671', '15', '', '', 'Raid: The Bastion of T
 INSERT INTO `disables` VALUES ('2', '754', '15', '', '', 'Raid: Throne of the Four Winds');
 
 -- Crash by item in Dungeon: The Oculus
-DELETE FROM `character_inventory` WHERE `item` IN 
-(
-	SELECT `guid` FROM `item_instance` WHERE `itemEntry` IN (37815,37859,37860)
-);
-DELETE FROM `item_instance` WHERE `itemEntry` IN (37815,37859,37860);
 DELETE FROM `creature_loot_template` WHERE `item` IN (37815,37859,37860);
 
 -- Change Justice Point and Conquest Point Reward
