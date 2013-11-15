@@ -1,5 +1,5 @@
 ################################################
-# Trinity Core World Server configuration file #
+# World Server configuration file #
 ################################################
 [worldserver]
 
@@ -54,7 +54,7 @@
 #        Important:   RealmID must match the realmlist inside the auth database.
 #        Default:     1
 
-RealmID = 3
+RealmID = 1
 
 #
 #    DataDir
@@ -85,13 +85,13 @@ LogsDir = "logs"
 #                                                                 section my.ini)
 #                     ".;/path/to/unix_socket;username;password;database" - (use Unix sockets on
 #                                                                           Unix/Linux)
-#        Default:     "127.0.0.1;3306;trinity;trinity;auth"       - (LoginDatabaseInfo)
-#                     "127.0.0.1;3306;trinity;trinity;world"      - (WorldDatabaseInfo)
-#                     "127.0.0.1;3306;trinity;trinity;characters" - (CharacterDatabaseInfo)
+#        Default:     "127.0.0.1;3306;root;ascent;auth"       - (LoginDatabaseInfo)
+#                     "127.0.0.1;3306;root;ascent;world"      - (WorldDatabaseInfo)
+#                     "127.0.0.1;3306;root;ascent;characters" - (CharacterDatabaseInfo)
 
-LoginDatabaseInfo     = "127.0.0.1;3306;root;;auth"
-WorldDatabaseInfo     = "127.0.0.1;3306;root;;world_end"
-CharacterDatabaseInfo = "127.0.0.1;3306;root;;characters_end"
+LoginDatabaseInfo     = "127.0.0.1;3306;root;ascent;auth"
+WorldDatabaseInfo     = "127.0.0.1;3306;root;ascent;world"
+CharacterDatabaseInfo = "127.0.0.1;3306;root;ascent;characters"
 
 #
 #    LoginDatabase.WorkerThreads
@@ -133,7 +133,7 @@ MaxPingTime = 30
 #        Description: TCP port to reach the world server.
 #        Default:     8085
 
-WorldServerPort = 8087
+WorldServerPort = 8085
 
 #
 #    BindIP
@@ -170,7 +170,7 @@ ProcessPriority = 1
 #        Default:     1   - (Speed)
 #                     9   - (Best compression)
 
-Compression = 9
+Compression = 1
 
 #
 #    PlayerLimit
@@ -181,7 +181,7 @@ Compression = 9
 #                     1+  - (Enabled)
 #                     0   - (Disabled, No limit)
 
-PlayerLimit = 500
+PlayerLimit = 100
 
 #
 #    SaveRespawnTimeImmediately
@@ -198,7 +198,7 @@ SaveRespawnTimeImmediately = 1
 #                     3+ - (Enabled, More checks before kick)
 #                     0  - (Disabled)
 
-MaxOverspeedPings = 0
+MaxOverspeedPings = 2
 
 #
 #    GridUnload
@@ -454,7 +454,7 @@ ChatLogs.Raid = 0
 #        Default:     0 - (Disabled)
 #                     1 - (Enabled)
 
-ChatLogs.Guild = 1
+ChatLogs.Guild = 0
 
 #
 #    ChatLogs.Public
@@ -497,7 +497,7 @@ ChatLogs.BattleGround = 0
 #                     16 - (FFA_PVP, Free for all pvp mode like arena PvP in all zones except rest
 #                          activated places and sanctuaries)
 
-GameType = 1
+GameType = 0
 
 #
 #    RealmZone
@@ -1036,7 +1036,7 @@ ClientCacheVersion = 0
 #        Default:     0 - (Disabled)
 #                     1 - (Enabled)
 
-Event.Announce = 1
+Event.Announce = 0
 
 #
 #    BeepAtStart
@@ -1053,7 +1053,7 @@ BeepAtStart = 1
 #        Example:     "Welcome to John\'s Server@This server runs on Trinity Core."
 #        Default:     "Welcome to a Trinity Core server."
 
-Motd = "@==============================@Chao mung den voi VFire 4.3.4 Realm!@Chuc cac ban co nhung giay phut thu gian vui ve.@==============================@"
+Motd = "Welcome to Wow Source."
 
 #
 #    Server.LoginInfo
@@ -1061,7 +1061,7 @@ Motd = "@==============================@Chao mung den voi VFire 4.3.4 Realm!@Chu
 #        Default:     0 - (Disabled)
 #                     1 - (Enabled)
 
-Server.LoginInfo = 1
+Server.LoginInfo = 0
 
 #
 #    Command.LookupMaxResults
@@ -1116,7 +1116,7 @@ AccountInstancesPerHour = 5
 #        Default:     0 - (Disabled)
 #                     1 - (Enabled)
 
-Warden.Enabled = 1
+Warden.Enabled = 0
 
 #
 #    Warden.NumMemChecks
@@ -1161,7 +1161,7 @@ Warden.ClientCheckHoldOff = 30
 #                     1 - (Kick)
 #                     2 - (Ban)
 
-Warden.ClientCheckFailAction = 1
+Warden.ClientCheckFailAction = 0
 
 #
 #    Warden.BanDuration
@@ -1170,7 +1170,7 @@ Warden.ClientCheckFailAction = 1
 #        Default:     86400 - (24 hours)
 #                     0     - (Permanent ban)
 
-Warden.BanDuration = 0
+Warden.BanDuration = 86400
 
 #
 ###################################################################################################
@@ -1183,7 +1183,7 @@ Warden.BanDuration = 0
 #        Default:     1 - (Enabled)
 #                     0 - (Disabled)
 
-AllowTwoSide.Accounts = 0
+AllowTwoSide.Accounts = 1
 
 #
 #    AllowTwoSide.Interaction.Calendar
@@ -1239,7 +1239,7 @@ AllowTwoSide.Interaction.Auction = 0
 #        Default:     0 - (Disabled)
 #                     1 - (Enabled)
 
-AllowTwoSide.Interaction.Mail = 1
+AllowTwoSide.Interaction.Mail = 0
 
 #
 #    AllowTwoSide.WhoList
@@ -1378,10 +1378,10 @@ Rate.Corpse.Decay.Looted = 0.5
 #
 
 Rate.Creature.Normal.Damage          = 1
-Rate.Creature.Elite.Elite.Damage     = 1.1
-Rate.Creature.Elite.RARE.Damage      = 1.1
-Rate.Creature.Elite.RAREELITE.Damage = 1.3
-Rate.Creature.Elite.WORLDBOSS.Damage = 1.3
+Rate.Creature.Elite.Elite.Damage     = 1
+Rate.Creature.Elite.RARE.Damage      = 1
+Rate.Creature.Elite.RAREELITE.Damage = 1
+Rate.Creature.Elite.WORLDBOSS.Damage = 1
 
 #
 #    Rate.Creature.Normal.SpellDamage
@@ -1397,10 +1397,10 @@ Rate.Creature.Elite.WORLDBOSS.Damage = 1.3
 #                     1 - (Rate.Creature.Elite.WORLDBOSS.SpellDamage)
 
 Rate.Creature.Normal.SpellDamage          = 1
-Rate.Creature.Elite.Elite.SpellDamage     = 1.1
-Rate.Creature.Elite.RARE.SpellDamage      = 1.1
-Rate.Creature.Elite.RAREELITE.SpellDamage = 1.3
-Rate.Creature.Elite.WORLDBOSS.SpellDamage = 1.3
+Rate.Creature.Elite.Elite.SpellDamage     = 1
+Rate.Creature.Elite.RARE.SpellDamage      = 1
+Rate.Creature.Elite.RAREELITE.SpellDamage = 1
+Rate.Creature.Elite.WORLDBOSS.SpellDamage = 1
 
 #
 #    Rate.Creature.Normal.HP
@@ -1547,7 +1547,7 @@ ChatLevelReq.Say = 1
 #        Default:     1 - (Enabled)
 #                     0 - (Disabled)
 
-AllowPlayerCommands = 0
+AllowPlayerCommands = 1
 
 #
 #    PreserveCustomChannels
@@ -1708,7 +1708,7 @@ Visibility.GroupMode = 1
 #                     533 - (Visibility.Distance.BGArenas)
 
 Visibility.Distance.Continents = 90
-Visibility.Distance.Instances = 500
+Visibility.Distance.Instances = 170
 Visibility.Distance.BGArenas = 533
 
 #
@@ -1793,12 +1793,12 @@ Rate.Skill.Discovery = 1
 Rate.Drop.Item.Poor             = 1
 Rate.Drop.Item.Normal           = 1
 Rate.Drop.Item.Uncommon         = 1
-Rate.Drop.Item.Rare             = 0.5
-Rate.Drop.Item.Epic             = 0.3
-Rate.Drop.Item.Legendary        = 0.1
+Rate.Drop.Item.Rare             = 1
+Rate.Drop.Item.Epic             = 1
+Rate.Drop.Item.Legendary        = 1
 Rate.Drop.Item.Artifact         = 1
 Rate.Drop.Item.Referenced       = 1
-Rate.Drop.Money                 = 1.5
+Rate.Drop.Money                 = 1
 
 #
 #    Rate.Drop.Item.ReferencedAmount
@@ -1816,9 +1816,9 @@ Rate.Drop.Item.ReferencedAmount = 1
 #                     1 - (Rate.XP.Quest)
 #                     1 - (Rate.XP.Explore)
 
-Rate.XP.Kill    = 4
-Rate.XP.Quest   = 5
-Rate.XP.Explore = 3
+Rate.XP.Kill    = 1
+Rate.XP.Quest   = 1
+Rate.XP.Explore = 1
 
 #
 #    Rate.RepairCost
@@ -1866,21 +1866,21 @@ Rate.Auction.Cut     = 1
 #        Description: Honor gain rate.
 #        Default:     1
 
-Rate.Honor = 0.8
+Rate.Honor = 1
 
 #
 #    Rate.Mining.Amount
 #        Description: Rate for minimum/maximum times a deposit can be used.
 #        Default:     1
 
-Rate.Mining.Amount = 0.5
+Rate.Mining.Amount = 1
 
 #
 #    Rate.Mining.Next
 #        Description: Mining rates.
 #        Default:     Chance to to mine a deposit again.
 
-Rate.Mining.Next = 0.1
+Rate.Mining.Next = 1
 
 #
 #    Rate.Talent
@@ -1901,7 +1901,7 @@ Rate.Reputation.Gain = 1
 #        Description: Reputation gain from killing low level (grey) creatures.
 #        Default:     1
 
-Rate.Reputation.LowLevel.Kill = 0.7
+Rate.Reputation.LowLevel.Kill = 1
 
 #
 #    Rate.Reputation.LowLevel.Quest
@@ -1920,9 +1920,9 @@ Rate.Reputation.RecruitAFriendBonus = 0.1
 #
 #    Rate.MoveSpeed
 #        Description: Movement speed rate.
-#        Default:     1
+#        Default:     0
 
-Rate.MoveSpeed = 1
+Rate.MoveSpeed = 0
 
 #
 #    Rate.InstanceResetTime
@@ -1956,8 +1956,8 @@ SkillGain.Gathering = 1
 #                     0   - (SkillChance.Grey)
 
 SkillChance.Orange = 100
-SkillChance.Yellow = 60
-SkillChance.Green  = 15
+SkillChance.Yellow = 75
+SkillChance.Green  = 25
 SkillChance.Grey   = 0
 
 #
@@ -2069,7 +2069,7 @@ Die.Command.Mode = 1
 #        Default:     0 - (Disabled)
 #                     1 - (Enabled)
 
-AutoBroadcast.On = 1
+AutoBroadcast.On = 0
 
 #
 #    AutoBroadcast.Center
@@ -2085,7 +2085,7 @@ AutoBroadcast.Center = 0
 #        Description: Timer (in milliseconds) for auto broadcasts.
 #        Default:     60000 - (60 seconds)
 
-AutoBroadcast.Timer = 300000
+AutoBroadcast.Timer = 60000
 
 #
 ###################################################################################################
@@ -2106,7 +2106,7 @@ Battleground.CastDeserter = 1
 #        Default:     0 - (Disabled)
 #                     1 - (Enabled)
 
-Battleground.QueueAnnouncer.Enable = 1
+Battleground.QueueAnnouncer.Enable = 0
 
 #
 #    Battleground.QueueAnnouncer.PlayerOnly
@@ -2227,7 +2227,7 @@ Wintergrasp.CrashRestartTimer = 10
 #        Default:     150 - (Enabled)
 #                     0   - (Disabled)
 
-Arena.MaxRatingDifference = 100
+Arena.MaxRatingDifference = 150
 
 #
 #    Arena.RatingDiscardTimer
@@ -2251,7 +2251,7 @@ Arena.RatedUpdateTimer = 5000
 #        Default:     0 - (Disabled)
 #                     1 - (Enabled)
 
-Arena.AutoDistributePoints = 1
+Arena.AutoDistributePoints = 0
 
 #
 #    Arena.AutoDistributeInterval
@@ -2267,7 +2267,7 @@ Arena.AutoDistributeInterval = 7
 #        Default:     0 - (Disabled)
 #                     1 - (Enabled)
 
-Arena.QueueAnnouncer.Enable = 1
+Arena.QueueAnnouncer.Enable = 0
 
 #
 #    Arena.ArenaSeason.ID
@@ -2369,7 +2369,7 @@ Console.Enable = 1
 #        Default:     0 - (Disabled)
 #                     1 - (Enabled)
 
-Ra.Enable = 1
+Ra.Enable = 0
 
 #
 #    Ra.IP
@@ -2383,7 +2383,7 @@ Ra.IP = "0.0.0.0"
 #        Description: TCP port to reach the remote console.
 #        Default:     3443
 
-Ra.Port = 3445
+Ra.Port = 3443
 
 #
 #    Ra.MinLevel
@@ -2426,7 +2426,7 @@ SOAP.Port = 7878
 #                     1 - (Unlink the character from account and free up the name, Appears as
 #                         deleted ingame)
 
-CharDelete.Method = 1
+CharDelete.Method = 0
 
 #
 #    CharDelete.MinLevel
@@ -2442,7 +2442,7 @@ CharDelete.MinLevel = 0
 #        Default:     30 - (Enabled)
 #                     0  - (Disabled, Don't delete any characters)
 
-CharDelete.KeepDays = 3
+CharDelete.KeepDays = 30
 
 #
 ###################################################################################################
@@ -2575,7 +2575,7 @@ MinRecordUpdateTimeDiff = 100
 #        Description: String to be displayed at first login of newly created characters.
 #         Default:    "" - (Disabled)
 
-PlayerStart.String = "MOI Y KIEN DONG GOP VUI LONG TRUY CAP WWW.WOWFORUM.VFIRE-CORE.COM"
+PlayerStart.String = ""
 
 #
 #     LevelReq.Trade
@@ -2866,7 +2866,7 @@ Guild.XPModifier = 0.25
 #        Default:     7807500
 #
 
-Guild.DailyXPCap = 3903750
+Guild.DailyXPCap = 7807500
 
 #
 #    Guild.WeeklyReputationCap
@@ -2874,7 +2874,7 @@ Guild.DailyXPCap = 3903750
 #        Default:     4375
 #
 
-Guild.WeeklyReputationCap = 2180
+Guild.WeeklyReputationCap = 4375
 
 #
 ###################################################################################################
@@ -2960,7 +2960,7 @@ Currency.ConquestPointsDefaultWeekCap = 1350
 #        Default: 180
 #
 
-Currency.ConquestPointsArenaReward = 30
+Currency.ConquestPointsArenaReward = 180
 
 #
 ###################################################################################################
