@@ -51,7 +51,7 @@ source_group(Kalimdor\\RazorfenKraul FILES ${scripts_RazorfenKraul})
 source_group(Kalimdor\\RuinsOfAhnQiraj FILES ${scripts_RuinsOfAhnQiraj})
 source_group(Kalimdor\\TempleOfAhnQiraj FILES ${scripts_TempleOfAhnQiraj})
 source_group(Kalimdor\\ThroneOfTheFourWinds FILES ${scripts_ThroneOfTheFourWinds})
-source_group(Kalimdor\\TheVortexPinnacle FILES ${scripts_VortexPinnacle})
+source_group(Kalimdor\\TheVortexPinnacle FILES ${scripts_TheVortexPinnacle})
 source_group(Kalimdor\\WailingCaverns FILES ${scripts_WailingCaverns})
 source_group(Kalimdor\\ZulFarrak FILES ${scripts_ZulFarrak})
 source_group(Kalimdor\\Zones FILES ${scripts_Zones})
@@ -73,7 +73,7 @@ set(scripts_STAT_SRCS
   ${scripts_RuinsOfAhnQiraj}
   ${scripts_TempleOfAhnQiraj}
   ${scripts_ThroneOfTheFourWinds}
-  ${scripts_VortexPinnacle}
+  ${scripts_TheVortexPinnacle}
   ${scripts_WailingCaverns}
   ${scripts_ZulFarrak}
   ${scripts_Zones}
