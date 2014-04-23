@@ -3020,3 +3020,90 @@ ItemLoading.requestSize = 2000
 
 #
 ####################################################################################################
+###################
+# TOLBARAD CONFIG #
+###################
+
+#
+#   Tol Barad.Enable
+#         Enable Tol Barad
+#         Default: 0 - off
+#                  1 - on
+
+Tol.Barad.Enable = 0
+
+#
+#    Tol Barad.PlayerMax
+#         Max players allowed in Tol Barad
+#         Default: 100 (players)
+
+Tol.Barad.PlayerMax = 100
+
+#
+#    Tol Barad.PlayerMin
+#         Min players allowed in Tol Barad
+#         Default: 0 (players)
+
+Tol.Barad.PlayerMin = 0
+
+#
+#    Tol Barad.PlayerMinLvl
+#         Min player level allowed in Tol Barad
+#         Default: 80
+
+Tol.Barad.PlayerMinLvl = 80
+
+#
+#    Tol Barad.BattleTimer
+#         Wartime timer
+#         Default: 30 (in min)
+
+Tol.Barad.BattleTimer = 30
+
+#
+#    Tol Barad.NoBattleTimer
+#         Out of wartime timer
+#         Default: 150 (in min)
+
+Tol.Barad.NoBattleTimer = 150
+
+#
+####################################################################################################
+###########################################################
+#   Homepage Settings
+#
+#    HPGold.Refresh.Enabled
+#        Description: activates homepage gold sync with session
+#        Default:     0 - (Disable)
+#                     1 - (Enable)
+
+HPGold.Refresh.Enabled = 1
+
+#
+#   HPGold.Refresh.Interval
+#       Description: interval for sync with hp gold
+#       Default: 10 (seconds)
+
+HPGold.Refresh.Interval = 10
+
+###########################################################
+
+###########################################################
+#   Cronjob Settings
+#
+#    Cronjobs.Enabled
+#        Description: activates cronjobs
+#        Default:     1 - (Enable)
+#                     0 - (Disable)
+#                     
+
+Cronjobs.Enabled = 1
+
+#
+#   Cronjobs.Execute.Interval
+#       Description: interval to execute cronjobs
+#       Default: 5 (seconds)
+
+Cronjobs.Execute.Interval = 5
+
+###########################################################
