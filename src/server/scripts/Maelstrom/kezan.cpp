@@ -73,7 +73,7 @@ public:
         {
             if (id == 1)
                 work = true;
-            me->LoadEquipment(2901);
+            //me->LoadEquipment(2901, true);
         }
 
         void JustReachedHome() { }
@@ -1221,7 +1221,7 @@ public:
     {
         if (player->GetQuestStatus(14126) != QUEST_STATUS_NONE)
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Yes, I want to go there!", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-        else if (creature->isQuestGiver())
+        else if (creature->IsQuestGiver())
             player->PrepareQuestMenu(creature->GetGUID());
         player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
         return true;
@@ -2093,45 +2093,6 @@ public:
     };
 };
 
-class npc_trade_prince_gallywix_out: public CreatureScript
-{
-public:
-    npc_trade_prince_gallywix_out() : CreatureScript("npc_trade_prince_gallywix_out") {}
-
-    bool OnQuestComplete(Player* player, Creature* creature, Quest const* goblin_aquest)
-    {
-		if (goblin_aquest->GetQuestId() == 14126)
-        {
-			player->RemoveAllAuras();
-            player->TeleportTo(648, 534.39f, 3274.37f, 1.03f, 5.17f);
-        }
-        return true;
-    }
-};
-
-class npc_sassy_hardwrench_p6144: public CreatureScript
-{
-public:
-    npc_sassy_hardwrench_p6144() : CreatureScript("npc_sassy_hardwrench_p6144") {}
-
-    bool OnQuestAccept(Player* player, Creature* creature, Quest const* goblin_bquest)
-    {
-		if (goblin_bquest->GetQuestId() == 14115)
-        {
-            for (int i = 0; i < 12; i++)
-				player->KilledMonsterCredit(35200, 0);
-        }
-
-		if (goblin_bquest->GetQuestId() == 14126)
-        {
-			player->RemoveAllAuras();
-			//player->ToPlayer()->GetPhaseMgr().SetCustomPhase(1);
-            player->TeleportTo(1, 1569.97f, -4397.41f, 16.0472f, 0.543025f);
-        }
-        return true;
-    }
-};
-
 void AddSC_kezan()
 {
     new npc_fourth_and_goal_target();
@@ -2165,6 +2126,4 @@ void AddSC_kezan()
     new npc_original_hot_rod();
     new npc_friend_gob();
     new npc_chipie_quest_giver_end_event();
-	new npc_trade_prince_gallywix_out();
-	new npc_sassy_hardwrench_p6144();
 }

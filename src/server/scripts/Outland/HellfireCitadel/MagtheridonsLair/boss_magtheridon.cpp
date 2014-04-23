@@ -32,19 +32,25 @@ EndScriptData */
 enum eSays
 {
     SAY_TAUNT                  = 0,
-    SAY_FREED                  = 1,
-    SAY_AGGRO                  = 2,
-    SAY_BANISH                 = 3,
-    SAY_CHAMBER_DESTROY        = 4,
-    SAY_PLAYER_KILLED          = 5,
-    SAY_DEATH                  = 6
+    SAY_TAUNT_1                = 1,
+    SAY_TAUNT_2                = 2,
+    SAY_TAUNT_3                = 3,
+    SAY_TAUNT_4                = 4,
+    SAY_TAUNT_5                = 5,
+
+    SAY_FREED                  = 6,
+    SAY_AGGRO                  = 7,
+    SAY_BANISH                 = 8,
+    SAY_CHAMBER_DESTROY        = 9,
+    SAY_PLAYER_KILLED          = 10,
+    SAY_DEATH                  = 11
 };
 
 enum eEmotes
 {
-    EMOTE_BERSERK              = 7,
-    EMOTE_BLASTNOVA            = 8,
-    EMOTE_BEGIN                = 9
+    EMOTE_BERSERK              = 12,
+    EMOTE_BLASTNOVA            = 13,
+    EMOTE_BEGIN                = 14
 };
 
 enum eCreatures
@@ -345,7 +351,7 @@ class boss_magtheridon : public CreatureScript
                 {
                     if (RandChat_Timer <= diff)
                     {
-                        Talk(SAY_TAUNT);
+                        Talk(RAND(SAY_TAUNT, SAY_TAUNT_1, SAY_TAUNT_2, SAY_TAUNT_3, SAY_TAUNT_4, SAY_TAUNT_5));
                         RandChat_Timer = 90000;
                     }
                     else
@@ -473,6 +479,7 @@ class mob_hellfire_channeler : public CreatureScript
             mob_hellfire_channelerAI(Creature* creature) : ScriptedAI(creature)
             {
                 instance = creature->GetInstanceScript();
+                me->SetReactState(REACT_DEFENSIVE);
             }
 
             InstanceScript* instance;
@@ -513,7 +520,7 @@ class mob_hellfire_channeler : public CreatureScript
 
             void JustSummoned(Creature* summon)
             {
-                summon->AI()->AttackStart(me->getVictim());
+                summon->AI()->AttackStart(me->GetVictim());
             }
 
             void DamageTaken(Unit*, uint32 &damage)

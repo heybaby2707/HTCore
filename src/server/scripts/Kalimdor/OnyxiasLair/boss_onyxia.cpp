@@ -273,7 +273,7 @@ public:
                         }
                         break;
                     case 9:
-                        me->GetMotionMaster()->MoveChase(me->getVictim());
+                        me->GetMotionMaster()->MoveChase(me->GetVictim());
                         BellowingRoarTimer = 1000;
                         break;
                     case 10:
@@ -350,7 +350,7 @@ public:
             MovePoint = iTemp;
         }
 
-        void UpdateAI(const uint32 Diff)
+        void UpdateAI(uint32 const Diff)
         {
             if (!UpdateVictim())
                 return;

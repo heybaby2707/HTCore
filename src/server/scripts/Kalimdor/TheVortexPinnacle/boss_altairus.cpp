@@ -103,7 +103,7 @@ public:
                 case NPC_WIND:
                     summoned->CastSpell(summoned, SPELL_CALL_THE_WIND_VISUAL, true);
                     break;
-	            case NPC_TWISTER:
+                case NPC_TWISTER:
                     summoned->SetReactState(REACT_PASSIVE);
                     summoned->GetMotionMaster()->MoveRandom(10.0f);
                     summoned->CastSpell(summoned, SPELL_TWISTER_AURA, true);

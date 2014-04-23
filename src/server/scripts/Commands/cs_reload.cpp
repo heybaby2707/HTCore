@@ -81,7 +81,7 @@ public:
             { "creature_involvedrelation",    SEC_ADMINISTRATOR, true,  &HandleReloadCreatureQuestInvRelationsCommand,  "", NULL },
             { "creature_linked_respawn",      SEC_GAMEMASTER,    true,  &HandleReloadLinkedRespawnCommand,              "", NULL },
             { "creature_loot_template",       SEC_ADMINISTRATOR, true,  &HandleReloadLootTemplatesCreatureCommand,      "", NULL },
-            { "creature_onkill_reward",       SEC_ADMINISTRATOR, true,  &HandleReloadOnKillRewardCommand,           	"", NULL },
+            { "creature_onkill_reward",       SEC_ADMINISTRATOR, true,  &HandleReloadOnKillRewardCommand,               "", NULL },
             { "creature_questrelation",       SEC_ADMINISTRATOR, true,  &HandleReloadCreatureQuestRelationsCommand,     "", NULL },
             { "creature_template",            SEC_ADMINISTRATOR, true,  &HandleReloadCreatureTemplateCommand,           "", NULL },
             //{ "db_script_string",             SEC_ADMINISTRATOR, true,  &HandleReloadDbScriptStringCommand,            "", NULL },
@@ -499,10 +499,9 @@ public:
             cInfo->questItems[5]      = fields[80].GetUInt32();
             cInfo->movementId         = fields[81].GetUInt32();
             cInfo->RegenHealth        = fields[82].GetBool();
-            cInfo->equipmentId        = fields[83].GetUInt32();
-            cInfo->MechanicImmuneMask = fields[84].GetUInt32();
-            cInfo->flags_extra        = fields[85].GetUInt32();
-            cInfo->ScriptID           = sObjectMgr->GetScriptId(fields[86].GetCString());
+            cInfo->MechanicImmuneMask = fields[83].GetUInt32();
+            cInfo->flags_extra        = fields[84].GetUInt32();
+            cInfo->ScriptID           = sObjectMgr->GetScriptId(fields[85].GetCString());
 
             sObjectMgr->CheckCreatureTemplate(cInfo);
         }

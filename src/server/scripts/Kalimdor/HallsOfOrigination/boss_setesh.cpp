@@ -140,7 +140,7 @@ class boss_setesh : public CreatureScript
             Talk(SAY_AGGRO);
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             if (!UpdateVictim())
                 return;
@@ -319,7 +319,7 @@ class npc_chaos_portal : public CreatureScript
         {
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             events.Update(diff);
 

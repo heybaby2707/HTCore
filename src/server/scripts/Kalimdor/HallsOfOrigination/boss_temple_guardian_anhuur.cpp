@@ -142,7 +142,7 @@ class boss_anhuur : public CreatureScript
                 {
                     events.SetPhase(PHASE_NORMAL);
                     me->RemoveAurasDueToSpell(SPELL_REVERBERATING_HYMN);
-                    me->GetMotionMaster()->MoveChase(me->getVictim() ? me->getVictim() : done_by);
+                    me->GetMotionMaster()->MoveChase(me->GetVictim() ? me->GetVictim() : done_by);
                     shielded = false;
                 }
             }
@@ -224,7 +224,7 @@ class boss_anhuur : public CreatureScript
             }
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             if(!UpdateVictim())
                 return;

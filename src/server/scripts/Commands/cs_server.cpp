@@ -199,7 +199,7 @@ public:
         return true;
     }
 
-    static bool HandleServerShutDownCommand(ChatHandler* /*handler*/, char const* args)
+    static bool HandleServerShutDownCommand(ChatHandler* handler, char const* args)
     {
         if (!*args)
             return false;

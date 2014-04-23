@@ -136,7 +136,7 @@ class npc_battered_red_drake: public CreatureScript
             me->GetMotionMaster()->MovePoint(uiPoint, RedDrakeLandInstance[uiPoint]);
         }
         
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff) 
         {
             if(Fly && !FlyDisabled)
             {
@@ -216,7 +216,7 @@ class npc_net_red_dragon: public CreatureScript
             }
         }
         
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff) 
         {
         }
         

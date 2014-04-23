@@ -12,7 +12,7 @@ file(GLOB_RECURSE scripts_BlackfathomDeeps Kalimdor/BlackfathomDeeps/*.cpp Kalim
 file(GLOB_RECURSE scripts_CavernsOfTime_BattleForMountHyjal Kalimdor/CavernsOfTime/BattleForMountHyjal/*.cpp Kalimdor/CavernsOfTime/BattleForMountHyjal/*.h)
 file(GLOB_RECURSE scripts_CavernsOfTime_CullingOfStratholme Kalimdor/CavernsOfTime/CullingOfStratholme/*.cpp Kalimdor/CavernsOfTime/CullingOfStratholme/*.h)
 file(GLOB_RECURSE scripts_CavernsOfTime_DarkPortal Kalimdor/CavernsOfTime/DarkPortal/*.cpp Kalimdor/CavernsOfTime/DarkPortal/*.h)
-file(GLOB_RECURSE scripts_CavernsOfTime_Dragonsoul Kalimdor/CavernsOfTime/Dragonsoul/*.cpp Kalimdor/CavernsOfTime/Dragonsoul/*.h)
+file(GLOB_RECURSE scripts_CavernsOfTime_DragonSoul Kalimdor/CavernsOfTime/DragonSoul/*.cpp Kalimdor/CavernsOfTime/DragonSoul/*.h)
 file(GLOB_RECURSE scripts_CavernsOfTime_EndTime Kalimdor/CavernsOfTime/EndTime/*.cpp Kalimdor/CavernsOfTime/EndTime/*.h)
 file(GLOB_RECURSE scripts_CavernsOfTime_EscapeFromDurnholdeKeep Kalimdor/CavernsOfTime/EscapeFromDurnholdeKeep/*.cpp Kalimdor/CavernsOfTime/EscapeFromDurnholdeKeep/*.h)
 file(GLOB_RECURSE scripts_CavernsOfTime_HourOfTwilight Kalimdor/CavernsOfTime/HourOfTwilight/*.cpp Kalimdor/CavernsOfTime/HourOfTwilight/*.h)
@@ -36,7 +36,7 @@ source_group(Kalimdor\\BlackfathomDeeps FILES ${scripts_BlackfathomDeeps})
 source_group(CavernsOfTime\\BattleForMountHyjal FILES ${scripts_CavernsOfTime_BattleForMountHyjal})
 source_group(CavernsOfTime\\CullingOfStratholme FILES ${scripts_CavernsOfTime_CullingOfStratholme})
 source_group(CavernsOfTime\\DarkPortal FILES ${scripts_CavernsOfTime_DarkPortal})
-source_group(CavernsOfTime\\Dragonsoul FILES ${scripts_CavernsOfTime_Dragonsoul})
+source_group(CavernsOfTime\\DragonSoul FILES ${scripts_CavernsOfTime_DragonSoul})
 source_group(CavernsOfTime\\EndTime FILES ${scripts_CavernsOfTime_EndTime})
 source_group(CavernsOfTime\\EscapeFromDurnholdeKeep FILES ${scripts_CavernsOfTime_EscapeFromDurnholdeKeep})
 source_group(CavernsOfTime\\HourOfTwilight FILES ${scripts_CavernsOfTime_HourOfTwilight})
@@ -51,7 +51,7 @@ source_group(Kalimdor\\RazorfenKraul FILES ${scripts_RazorfenKraul})
 source_group(Kalimdor\\RuinsOfAhnQiraj FILES ${scripts_RuinsOfAhnQiraj})
 source_group(Kalimdor\\TempleOfAhnQiraj FILES ${scripts_TempleOfAhnQiraj})
 source_group(Kalimdor\\ThroneOfTheFourWinds FILES ${scripts_ThroneOfTheFourWinds})
-source_group(Kalimdor\\TheVortexPinnacle FILES ${scripts_TheVortexPinnacle})
+source_group(Kalimdor\\TheVortexPinnacle FILES ${scripts_VortexPinnacle})
 source_group(Kalimdor\\WailingCaverns FILES ${scripts_WailingCaverns})
 source_group(Kalimdor\\ZulFarrak FILES ${scripts_ZulFarrak})
 source_group(Kalimdor\\Zones FILES ${scripts_Zones})
@@ -73,7 +73,7 @@ set(scripts_STAT_SRCS
   ${scripts_RuinsOfAhnQiraj}
   ${scripts_TempleOfAhnQiraj}
   ${scripts_ThroneOfTheFourWinds}
-  ${scripts_TheVortexPinnacle}
+  ${scripts_VortexPinnacle}
   ${scripts_WailingCaverns}
   ${scripts_ZulFarrak}
   ${scripts_Zones}

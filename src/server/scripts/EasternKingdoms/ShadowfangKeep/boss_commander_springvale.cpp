@@ -150,7 +150,7 @@ class boss_commander_springvale : public CreatureScript
                 instance->DoCompleteAchievement(ACHIEVEMENT_TO_THE_GROUND);
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff) 
         {
             if(!UpdateVictim())
                 return;

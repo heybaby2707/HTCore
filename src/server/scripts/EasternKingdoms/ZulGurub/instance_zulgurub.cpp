@@ -18,6 +18,7 @@
 
 #include "ScriptMgr.h"
 #include "InstanceScript.h"
+#include "UnitAI.h"
 #include "zulgurub.h"
 
 DoorData const doorData[] =
@@ -28,6 +29,16 @@ DoorData const doorData[] =
     { GO_ZANZIL_DOOR,                   DATA_ZANZIL,    DOOR_TYPE_ROOM, BOUNDARY_NONE },
     //{ GO_THE_CACHE_OF_MADNESS_DOOR,     DATA_xxxxxxx,   DOOR_TYPE_ROOM, BOUNDARY_NONE },
     { 0,                                0,              DOOR_TYPE_ROOM, BOUNDARY_NONE }
+};
+
+const Position TikiTorchSP[6]=
+{
+    {-11933.2f, -1824.54f, 51.7838f, 1.53589f},
+    {-11919.8f, -1824.58f, 51.4590f, 1.53589f},
+    {-11903.5f, -1824.38f, 51.5542f, 1.51844f},
+    {-11879.6f, -1824.81f, 50.8839f, 1.46608f},
+    {-11864.6f, -1824.44f, 51.1218f, 1.50098f},
+    {-11849.5f, -1824.58f, 51.4813f, 1.55334f},
 };
 
 class instance_zulgurub : public InstanceMapScript
@@ -41,18 +52,39 @@ class instance_zulgurub : public InstanceMapScript
             {
                 SetBossNumber(EncounterCount);
                 LoadDoorData(doorData);
+            }
+
+             uint64 venoxisGUID;
+             uint64 mandokirGUID;
+             uint64 kilnaraGUID;
+             uint64 zanzilGUID;
+             uint64 jindoGUID;
+             uint64 hazzarahGUID;
+             uint64 renatakiGUID;
+             uint64 wushoolayGUID;
+             uint64 grilekGUID;
+             uint64 jindoTiggerGUID;
+             uint8 tikiMaskId;			
+
+            void Initialize()
+            {
                 venoxisGUID         = 0;
                 mandokirGUID        = 0;
                 kilnaraGUID         = 0;
                 zanzilGUID          = 0;
-                jindoGUID           = 0;
                 hazzarahGUID        = 0;
                 renatakiGUID        = 0;
                 wushoolayGUID       = 0;
                 grilekGUID          = 0;
-                jindoTiggerGUID     = 0;
-            }
+                jindoTiggerGUID     = 0;			   
+                jindoGUID           = 0;
+                tikiMaskId          = 0;
 
+                for (int i = 0; i < 6; ++i)
+                    if (Creature* torch = instance->SummonCreature(52419, TikiTorchSP[i]))
+                        torch->GetAI()->SetData(DATA_POSITION_ID, i);
+            }
+			
             void OnCreatureCreate(Creature* creature)
             {
                 switch (creature->GetEntry())
@@ -148,11 +180,23 @@ class instance_zulgurub : public InstanceMapScript
                 return true;
             }
 
-            /*
             void SetData(uint32 type, uint32 data)
             {
                 switch (type)
                 {
+                    case DATA_TIKI_MASK_ID:
+                        {
+                            switch (data)
+                            {
+                                case IN_PROGRESS:
+                                    ++tikiMaskId;
+                                    break;
+                                case NOT_STARTED:
+                                    tikiMaskId = 0;
+                                    break;
+                            }
+                        }
+                        break;
                 }
             }
 
@@ -160,11 +204,11 @@ class instance_zulgurub : public InstanceMapScript
             {
                 switch (type)
                 {
+                    case DATA_TIKI_MASK_ID:              return tikiMaskId;
                 }
 
                 return 0;
             }
-            */
 
             uint64 GetData64(uint32 type) const
             {
@@ -241,17 +285,6 @@ class instance_zulgurub : public InstanceMapScript
                 OUT_LOAD_INST_DATA_COMPLETE;
             }
 
-        protected:
-             uint64 venoxisGUID;
-             uint64 mandokirGUID;
-             uint64 kilnaraGUID;
-             uint64 zanzilGUID;
-             uint64 jindoGUID;
-             uint64 hazzarahGUID;
-             uint64 renatakiGUID;
-             uint64 wushoolayGUID;
-             uint64 grilekGUID;
-             uint64 jindoTiggerGUID;
         };
 
         InstanceScript* GetInstanceScript(InstanceMap* map) const

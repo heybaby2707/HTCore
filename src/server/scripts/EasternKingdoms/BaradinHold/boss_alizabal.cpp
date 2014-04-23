@@ -98,7 +98,7 @@ class boss_alizabal : public CreatureScript
                 _Reset();
                 Hate = false;
                 Skewer = false;
-                instance->HandleGameObject(instance->GetData64(GO_ALIZABAL_DOOR), false); // set me to true, when we release step by step
+                //instance->HandleGameObject(instance->GetData64(GO_ALIZABAL_DOOR), false); // set me to true, when we release step by step
             }
 
             void EnterCombat(Unit* /*who*/)
@@ -131,7 +131,7 @@ class boss_alizabal : public CreatureScript
                 //_DespawnAtEvade();
             }
 
-            void DoAction(const int32 action)
+            void DoAction(int32 const action)
             {
                 switch (action)
                 {
@@ -155,7 +155,7 @@ class boss_alizabal : public CreatureScript
                 }
             }
 
-            void UpdateAI(const uint32 diff)
+            void UpdateAI(uint32 const diff)
             {
                 if (!UpdateVictim())
                     return;
@@ -247,7 +247,7 @@ class boss_alizabal : public CreatureScript
                             me->RemoveAura(SPELL_BLADE_DANCE_DUMMY);
                             me->SetSpeed(MOVE_WALK, 1.0f);
                             me->SetSpeed(MOVE_RUN, 1.14f);
-                            me->GetMotionMaster()->MoveChase(me->getVictim());
+                            me->GetMotionMaster()->MoveChase(me->GetVictim());
                             Hate = false;
                             Skewer = false;
                             break;

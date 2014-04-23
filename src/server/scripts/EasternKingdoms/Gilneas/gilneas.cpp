@@ -6,82 +6,10 @@
 #include "GameObjectAI.h"
 #include "CreatureGroups.h"
 
-// Phase 1
-/*######
-## npc_prince_liam_greymane_phase1
-######*/
-class npc_prince_liam_greymane_phase1: public CreatureScript
-{
-enum
-    {
-        DELAY_SAY_PRINCE_LIAM_GREYMANE  = 20000
-    };
-public:
-    npc_prince_liam_greymane_phase1() :
-            CreatureScript("npc_prince_liam_greymane_phase1") {}
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_prince_liam_greymane_phase1AI(creature);
-    }
-
-    struct npc_prince_liam_greymane_phase1AI: public ScriptedAI
-    {
-        npc_prince_liam_greymane_phase1AI(Creature *c) : ScriptedAI(c) {}
-
-        uint32 tSay; // Time left for say
-        uint32 cSay; // Current Say
-
-        // Evade or Respawn
-        void Reset()
-        {
-            tSay = DELAY_SAY_PRINCE_LIAM_GREYMANE; // Reset timer
-            cSay = 1;                              // Start from 1
-        }
-
-        //Timed events
-        void UpdateAI(const uint32 diff)
-        {
-            //Out of combat
-            if (!me->getVictim())
-            {
-                //Timed say
-                if (tSay <= diff)
-                {
-                    switch (cSay)
-                    {
-                        default:
-                        case 1:
-                             Talk(SAY_PRINCE_LIAM_GREYMANE_1);
-                            cSay++;
-                            break;
-                        case 2:
-                             Talk(SAY_PRINCE_LIAM_GREYMANE_2);
-                            cSay++;
-                            break;
-                        case 3:
-                             Talk(SAY_PRINCE_LIAM_GREYMANE_3);
-                            cSay = 1; // Reset to 1
-                            break;
-                    }
-
-                    tSay = DELAY_SAY_PRINCE_LIAM_GREYMANE; // Reset the timer
-                }
-                else
-                {
-                    tSay -= diff;
-                }
-                return;
-            }
-        }
-    };
-};
-
 // Phase 2
 /*######
 ## npc_prince_liam_greymane_phase2
 ######*/
-
 class npc_prince_liam_greymane_phase2 : public CreatureScript
 {
 public:
@@ -132,7 +60,7 @@ public:
                 ++dmgCount;
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             //If creature has no target
             if (!UpdateVictim())
@@ -177,8 +105,8 @@ public:
                 //Attack
                 if (dmgCount < 2)
                     DoMeleeAttackIfReady();
-                else if (me->getVictim()->GetTypeId() == TYPEID_PLAYER) dmgCount = 0;
-                else if (me->getVictim()->isPet()) dmgCount = 0;
+                else if (me->GetVictim()->GetTypeId() == TYPEID_PLAYER) dmgCount = 0;
+                else if (me->GetVictim()->isPet()) dmgCount = 0;
                 else
                 {
                     if (tAnimate <= diff)
@@ -277,9 +205,9 @@ public:
             if (dmgCount < 2)
                 DoMeleeAttackIfReady();
             else
-                if (me->getVictim()->GetTypeId() == TYPEID_PLAYER) dmgCount = 0;
+                if (me->GetVictim()->GetTypeId() == TYPEID_PLAYER) dmgCount = 0;
             else
-                if (me->getVictim()->isPet()) dmgCount = 0;
+                if (me->GetVictim()->isPet()) dmgCount = 0;
             else
             {
                 if (tAnimate <= diff)
@@ -303,30 +231,7 @@ public:
 };
 
 /*######
-## npc_gwen_armstead_p2
-######*/
-class npc_gwen_armstead_p2 : public CreatureScript
-{
-public:
-    npc_gwen_armstead_p2() : CreatureScript("npc_gwen_armstead_p2") {}
-
-    bool OnQuestReward(Player* player, Creature* creature, Quest const* quest, uint32 opt)
-    {
-        if (quest->GetQuestId() == QUEST_ROYAL_ORDERS)
-        {
-            if (creature->isQuestGiver())
-            {
-                player->TalkedToCreature(creature->GetEntry(), creature->GetGUID());
-                player->PrepareGossipMenu(creature, 0 ,true);
-                player->SendPreparedGossip(creature);
-            }
-        }
-        return true;
-    }
-};
-
-/*######
-## npc_rampaging_worgen
+## npc_rampaging_worgen_phase2
 ######*/
 class npc_rampaging_worgen : public CreatureScript
 {
@@ -412,10 +317,10 @@ public:
             if (dmgCount < 2)
                 DoMeleeAttackIfReady();
             else
-                if (me->getVictim()->GetTypeId() == TYPEID_PLAYER)
+                if (me->GetVictim()->GetTypeId() == TYPEID_PLAYER)
                     dmgCount = 0;
             else
-                if (me->getVictim()->isPet())
+                if (me->GetVictim()->isPet())
                     dmgCount = 0;
             else
             {
@@ -429,72 +334,6 @@ public:
                     tAnimate -= diff;
             }
         }
-    };
-};
-
-
-/*######
-## npc_rampaging_worgen2
-######*/
-class npc_rampaging_worgen2 : public CreatureScript
-{
-public:
-    npc_rampaging_worgen2() : CreatureScript("npc_rampaging_worgen2") {}
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_rampaging_worgen2AI (creature);
-    }
-
-    struct npc_rampaging_worgen2AI : public ScriptedAI
-    {
-        npc_rampaging_worgen2AI(Creature* creature) : ScriptedAI(creature) {}
-
-        void JustRespawned()
-        {
-            tEnrage = 0;
-            tRun = 500;
-            onceRun = true;
-            x = me->m_positionX + cos(me->m_orientation)*8;
-            y = me->m_positionY + sin(me->m_orientation)*8;
-            z = me->m_positionZ;
-            willCastEnrage = urand(0, 1);
-        }
-
-        void UpdateAI(const uint32 diff)
-        {
-            if (tRun <= diff && onceRun)
-            {
-                me->GetMotionMaster()->MoveCharge(x, y, z, 8);
-                onceRun = false;
-            }
-            else
-                tRun -= diff;
-
-            if (!UpdateVictim())
-                return;
-
-            if (tEnrage <= diff)
-            {
-                if (me->GetHealthPct() <= 30 && willCastEnrage)
-                {
-                    me->MonsterTextEmote(-106, 0);
-                    DoCast(me, SPELL_ENRAGE);
-                    tEnrage = CD_ENRAGE;
-                }
-            }
-            else
-                tEnrage -= diff;
-
-            DoMeleeAttackIfReady();
-        }
-
-    private :
-        uint16 tRun;
-        uint16 tEnrage;
-        bool onceRun;
-        bool willCastEnrage;
-        float x, y, z;
     };
 };
 
@@ -608,6 +447,227 @@ public:
 };
 
 /*######
+## npc_mariam_spellwalker
+######*/
+class npc_mariam_spellwalker : public CreatureScript
+{
+public:
+    npc_mariam_spellwalker() : CreatureScript("npc_mariam_spellwalker") {}
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_mariam_spellwalkerAI (creature);
+    }
+
+    struct npc_mariam_spellwalkerAI : public ScriptedAI
+    {
+        npc_mariam_spellwalkerAI(Creature* creature) : ScriptedAI(creature) {}
+
+        uint32 tSeek;
+
+        void Reset()
+        {
+            tSeek = urand(1000, 2000);
+        }
+
+        void DamageTaken(Unit* who, uint32& damage)
+        {
+            if (me->HealthBelowPct(AI_MIN_HP) && who->GetEntry() == NPC_BLOODFANG_WORGEN)
+                damage = 0;
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (tSeek <= diff)
+            {
+                if ((me->isAlive()) && (!me->isInCombat() && (me->GetDistance2d(me->GetHomePosition().GetPositionX(), me->GetHomePosition().GetPositionY()) <= 1.0f)))
+                    if (Creature* enemy = me->FindNearestCreature(NPC_BLOODFANG_WORGEN, 5.0f, true))
+                        me->AI()->AttackStart(enemy); // She should really only grab agro when npc Cleese is not there, so we will keep this range small
+                tSeek = urand(1000, 2000); // optimize cpu load, seeking only sometime between 1 and 2 seconds
+            }
+            else tSeek -= diff;
+
+            if (!UpdateVictim())
+                return;
+
+            if (me->GetVictim()->GetEntry() == NPC_BLOODFANG_WORGEN)
+                DoSpellAttackIfReady(SPELL_FROSTBOLT_VISUAL_ONLY); //Dummy spell, visual only to prevent getting agro (Blizz-like)
+            else
+                DoMeleeAttackIfReady();
+        }
+    };
+};
+
+/*######
+## npc_rampaging_worgen2
+######*/
+class npc_rampaging_worgen2 : public CreatureScript
+{
+public:
+    npc_rampaging_worgen2() : CreatureScript("npc_rampaging_worgen2") {}
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_rampaging_worgen2AI (creature);
+    }
+
+    struct npc_rampaging_worgen2AI : public ScriptedAI
+    {
+        npc_rampaging_worgen2AI(Creature* creature) : ScriptedAI(creature) {}
+
+        void JustRespawned()
+        {
+            tEnrage = 0;
+            tRun = 500;
+            onceRun = true;
+            x = me->m_positionX + cos(me->m_orientation)*8;
+            y = me->m_positionY + sin(me->m_orientation)*8;
+            z = me->m_positionZ;
+            willCastEnrage = urand(0, 1);
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (tRun <= diff && onceRun)
+            {
+                me->GetMotionMaster()->MoveCharge(x, y, z, 8);
+                onceRun = false;
+            }
+            else
+                tRun -= diff;
+
+            if (!UpdateVictim())
+                return;
+
+            if (tEnrage <= diff)
+            {
+                if (me->GetHealthPct() <= 30 && willCastEnrage)
+                {
+                    me->MonsterTextEmote(-106, 0);
+                    DoCast(me, SPELL_ENRAGE);
+                    tEnrage = CD_ENRAGE;
+                }
+            }
+            else
+                tEnrage -= diff;
+
+            DoMeleeAttackIfReady();
+        }
+
+    private :
+        uint16 tRun;
+        uint16 tEnrage;
+        bool onceRun;
+        bool willCastEnrage;
+        float x, y, z;
+    };
+};
+
+/*######
+## npc_gilnean_royal_guard
+######*/
+class npc_gilnean_royal_guard : public CreatureScript
+{
+public:
+    npc_gilnean_royal_guard() : CreatureScript("npc_gilnean_royal_guard") {}
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_gilnean_royal_guardAI (creature);
+    }
+
+    struct npc_gilnean_royal_guardAI : public ScriptedAI
+    {
+        npc_gilnean_royal_guardAI(Creature* creature) : ScriptedAI(creature) {}
+
+        void Reset()
+        {
+            tAnimate   = DELAY_ANIMATE;
+            dmgCount   = 0;
+            tSound     = DELAY_SOUND;
+            playSound  = false;
+            tSeek      = urand(1000, 2000);
+        }
+
+        void DamageTaken(Unit* who, uint32 &Damage)
+        {
+            if (who->GetTypeId() == TYPEID_PLAYER)
+            {
+                me->getThreatManager().resetAllAggro();
+                who->AddThreat(me, 1.0f);
+                me->AddThreat(who, 1.0f);
+                me->AI()->AttackStart(who);
+                dmgCount = 0;
+            }
+            else if (who->isPet())
+            {
+                me->getThreatManager().resetAllAggro();
+                me->AddThreat(who, 1.0f);
+                me->AI()->AttackStart(who);
+                dmgCount = 0;
+            }
+        }
+
+        void DamageDealt(Unit* target, uint32 &damage, DamageEffectType damageType)
+        {
+            if (target->GetEntry() == NPC_BLOODFANG_WORGEN)
+                dmgCount ++;
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (tSeek <= diff)
+            {
+                if ((me->isAlive()) && (!me->isInCombat() && (me->GetDistance2d(me->GetHomePosition().GetPositionX(), me->GetHomePosition().GetPositionY()) <= 1.0f)))
+                    if (Creature* enemy = me->FindNearestCreature(NPC_BLOODFANG_WORGEN, 16.0f, true))
+                        me->AI()->AttackStart(enemy);
+                tSeek = urand(1000, 2000);
+            }
+            else tSeek -= diff;
+
+            if (!UpdateVictim())
+                return;
+
+            if (tSound <= diff)
+            {
+                me->PlayDistanceSound(SOUND_SWORD_FLESH);
+                tSound = DELAY_SOUND;
+                playSound = false;
+            }
+
+            if (playSound == true)
+                tSound -= diff;
+
+            if (dmgCount < 2)
+                DoMeleeAttackIfReady();
+            else
+                if (me->GetVictim()->GetTypeId() == TYPEID_PLAYER) dmgCount = 0;
+            else
+                if (me->GetVictim()->isPet()) dmgCount = 0;
+            else
+            {
+                if (tAnimate <= diff)
+                {
+                    me->HandleEmoteCommand(EMOTE_ONESHOT_ATTACK1H);
+                    playSound = true;
+                    tAnimate = DELAY_ANIMATE;
+                }
+                else
+                    tAnimate -= diff;
+            }
+        }
+
+    private :
+        uint32 tAnimate;
+        uint32 tSound;
+        uint32 dmgCount;
+        uint32 tSeek;
+        bool playSound;
+
+    };
+};
+
+/*######
 ## npc_frightened_citizen
 ######*/
 class npc_frightened_citizen : public CreatureScript
@@ -661,119 +721,6 @@ public:
         uint32 mui_moveTimer;
     };
 };
-
-// Phase 4
-/*######
-## npc_bloodfang_worgen
-######*/ /*
-class npc_bloodfang_worgen : public CreatureScript
-{
-public:
-    npc_bloodfang_worgen() : CreatureScript("npc_bloodfang_worgen") {}
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_bloodfang_worgenAI (creature);
-    }
-
-    struct npc_bloodfang_worgenAI : public ScriptedAI
-    {
-        npc_bloodfang_worgenAI(Creature* creature) : ScriptedAI(creature) {}
-
-        void Reset()
-        {
-            tEnrage    = 0;
-            dmgCount   = 0;
-            tAnimate   = DELAY_ANIMATE;
-            tSound     = DELAY_SOUND;
-            playSound  = false;
-            willCastEnrage = urand(0, 1);
-        }
-
-        void DamageDealt(Unit* target, uint32 &damage, DamageEffectType damageType)
-        {
-            if (target->GetEntry() == NPC_GILNEAN_ROYAL_GUARD || target->GetEntry() == NPC_SERGEANT_CLEESE || target->GetEntry() == NPC_MYRIAM_SPELLWALKER)
-                dmgCount++;
-        }
-
-        void DamageTaken(Unit* who, uint32 &Damage)
-        {
-            if (who->GetTypeId() == TYPEID_PLAYER)
-            {
-                me->getThreatManager().resetAllAggro();
-                who->AddThreat(me, 1.0f);
-                me->AddThreat(who, 1.0f);
-                me->AI()->AttackStart(who);
-                dmgCount = 0;
-            }
-            else if (who->isPet())
-            {
-                me->getThreatManager().resetAllAggro();
-                me->AddThreat(who, 1.0f);
-                me->AI()->AttackStart(who);
-                dmgCount = 0;
-            }
-        }
-
-        void UpdateAI(const uint32 diff)
-        {
-            if (!UpdateVictim())
-                return;
-
-            if (tEnrage <= diff && willCastEnrage)
-            {
-                if (me->GetHealthPct() <= 30)
-                {
-                    me->MonsterTextEmote(-106, 0);
-                    DoCast(me, SPELL_ENRAGE);
-                    tEnrage = CD_ENRAGE;
-                }
-            }
-            else tEnrage -= diff;
-
-            if (playSound == true)
-                tSound -= diff;
-
-            if (tSound <= diff)
-            {
-                me->PlayDistanceSound(SOUND_SWORD_PLATE);
-                tSound = DELAY_SOUND;
-                playSound = false;
-            }
-
-            if (dmgCount < 2)
-                DoMeleeAttackIfReady();
-            else
-                if (me->getVictim()->GetTypeId() == TYPEID_PLAYER)
-                    dmgCount = 0;
-            else
-                if (me->getVictim()->isPet())
-                    dmgCount = 0;
-            else
-            {
-                if (tAnimate <= diff)
-                {
-                    me->HandleEmoteCommand(EMOTE_ONESHOT_ATTACK_UNARMED);
-                    tAnimate = DELAY_ANIMATE;
-                    playSound = true;
-                }
-                else
-                    tAnimate -= diff;
-            }
-        }
-
-    private :
-        uint32 tEnrage;
-        uint32 dmgCount;
-        uint32 tAnimate;
-        uint32 tSound;
-        bool playSound;
-        bool willCastEnrage;
-
-    };
-};
-*/
-
 
 /*######
 ## npc_sergeant_cleese
@@ -855,164 +802,7 @@ static const Position spawnPos[3][3]=
     }
 };
 
-/*######
-## npc_gilnean_royal_guard
-######*/
-class npc_gilnean_royal_guard : public CreatureScript
-{
-public:
-    npc_gilnean_royal_guard() : CreatureScript("npc_gilnean_royal_guard") {}
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_gilnean_royal_guardAI (creature);
-    }
-
-    struct npc_gilnean_royal_guardAI : public ScriptedAI
-    {
-        npc_gilnean_royal_guardAI(Creature* creature) : ScriptedAI(creature) {}
-
-        void Reset()
-        {
-            tAnimate   = DELAY_ANIMATE;
-            dmgCount   = 0;
-            tSound     = DELAY_SOUND;
-            playSound  = false;
-            tSeek      = urand(1000, 2000);
-        }
-
-        void DamageTaken(Unit* who, uint32 &Damage)
-        {
-            if (who->GetTypeId() == TYPEID_PLAYER)
-            {
-                me->getThreatManager().resetAllAggro();
-                who->AddThreat(me, 1.0f);
-                me->AddThreat(who, 1.0f);
-                me->AI()->AttackStart(who);
-                dmgCount = 0;
-            }
-            else if (who->isPet())
-            {
-                me->getThreatManager().resetAllAggro();
-                me->AddThreat(who, 1.0f);
-                me->AI()->AttackStart(who);
-                dmgCount = 0;
-            }
-        }
-
-        void DamageDealt(Unit* target, uint32 &damage, DamageEffectType damageType)
-        {
-            if (target->GetEntry() == NPC_BLOODFANG_WORGEN)
-                dmgCount ++;
-        }
-
-        void UpdateAI(const uint32 diff)
-        {
-            if (tSeek <= diff)
-            {
-                if ((me->isAlive()) && (!me->isInCombat() && (me->GetDistance2d(me->GetHomePosition().GetPositionX(), me->GetHomePosition().GetPositionY()) <= 1.0f)))
-                    if (Creature* enemy = me->FindNearestCreature(NPC_BLOODFANG_WORGEN, 16.0f, true))
-                        me->AI()->AttackStart(enemy);
-                tSeek = urand(1000, 2000);
-            }
-            else tSeek -= diff;
-
-            if (!UpdateVictim())
-                return;
-
-            if (tSound <= diff)
-            {
-                me->PlayDistanceSound(SOUND_SWORD_FLESH);
-                tSound = DELAY_SOUND;
-                playSound = false;
-            }
-
-            if (playSound == true)
-                tSound -= diff;
-
-            if (dmgCount < 2)
-                DoMeleeAttackIfReady();
-            else
-                if (me->getVictim()->GetTypeId() == TYPEID_PLAYER) dmgCount = 0;
-            else
-                if (me->getVictim()->isPet()) dmgCount = 0;
-            else
-            {
-                if (tAnimate <= diff)
-                {
-                    me->HandleEmoteCommand(EMOTE_ONESHOT_ATTACK1H);
-                    playSound = true;
-                    tAnimate = DELAY_ANIMATE;
-                }
-                else
-                    tAnimate -= diff;
-            }
-        }
-
-    private :
-        uint32 tAnimate;
-        uint32 tSound;
-        uint32 dmgCount;
-        uint32 tSeek;
-        bool playSound;
-
-    };
-};
-
-/*######
-## npc_mariam_spellwalker
-######*/
-class npc_mariam_spellwalker : public CreatureScript
-{
-public:
-    npc_mariam_spellwalker() : CreatureScript("npc_mariam_spellwalker") {}
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_mariam_spellwalkerAI (creature);
-    }
-
-    struct npc_mariam_spellwalkerAI : public ScriptedAI
-    {
-        npc_mariam_spellwalkerAI(Creature* creature) : ScriptedAI(creature) {}
-
-        uint32 tSeek;
-
-        void Reset()
-        {
-            tSeek = urand(1000, 2000);
-        }
-
-        void DamageTaken(Unit* who, uint32& damage)
-        {
-            if (me->HealthBelowPct(AI_MIN_HP) && who->GetEntry() == NPC_BLOODFANG_WORGEN)
-                damage = 0;
-        }
-
-        void UpdateAI(const uint32 diff)
-        {
-            if (tSeek <= diff)
-            {
-                if ((me->isAlive()) && (!me->isInCombat() && (me->GetDistance2d(me->GetHomePosition().GetPositionX(), me->GetHomePosition().GetPositionY()) <= 1.0f)))
-                    if (Creature* enemy = me->FindNearestCreature(NPC_BLOODFANG_WORGEN, 5.0f, true))
-                        me->AI()->AttackStart(enemy); // She should really only grab agro when npc Cleese is not there, so we will keep this range small
-                tSeek = urand(1000, 2000); // optimize cpu load, seeking only sometime between 1 and 2 seconds
-            }
-            else tSeek -= diff;
-
-            if (!UpdateVictim())
-                return;
-
-            if (me->getVictim()->GetEntry() == NPC_BLOODFANG_WORGEN)
-                DoSpellAttackIfReady(SPELL_FROSTBOLT_VISUAL_ONLY); //Dummy spell, visual only to prevent getting agro (Blizz-like)
-            else
-                DoMeleeAttackIfReady();
-        }
-    };
-};
-
 /* QUEST - 14154 - By The Skin of His Teeth - START */
-
 class npc_lord_darius_crowley_c1 : public CreatureScript
 {
     enum
@@ -1105,7 +895,7 @@ class npc_lord_darius_crowley_c1 : public CreatureScript
 
         void CastVictim(uint32 spellId)
         {
-            if (me->getVictim())
+            if (me->GetVictim())
                 DoCastVictim(spellId);
         }
 
@@ -1238,7 +1028,6 @@ public:
 /*######
 ## npc_worgen_runt_c1
 ######*/
-
 class npc_worgen_runt_c1 : public CreatureScript
 {
 public:
@@ -1368,7 +1157,6 @@ public:
 /*######
 ## npc_worgen_runt_c2
 ######*/
-
 class npc_worgen_runt_c2 : public CreatureScript
 {
 public:
@@ -1498,7 +1286,6 @@ public:
 /*######
 ## npc_worgen_alpha_c1
 ######*/
-
 class npc_worgen_alpha_c1 : public CreatureScript
 {
 public:
@@ -1628,7 +1415,6 @@ public:
 /*######
 ## npc_worgen_alpha_c2
 ######*/
-
 class npc_worgen_alpha_c2 : public CreatureScript
 {
 public:
@@ -1726,6 +1512,94 @@ public:
 
 /* QUEST - 14154 - By The Skin of His Teeth - END */
 
+/* QUEST - 14159 - The Rebel Lord's Arsenal - START */
+// Phase 4
+/*######
+## npc_josiah_avery
+######*/
+class npc_josiah_avery : public CreatureScript
+{
+public:
+    npc_josiah_avery() : CreatureScript("npc_josiah_avery") {}
+
+    bool OnQuestReward(Player* player, Creature* creature, Quest const* quest, uint32 opt)
+    {
+        if (quest->GetQuestId() == QUEST_THE_REBEL_LORDS_ARSENAL)
+        {
+            creature->AddAura(SPELL_WORGEN_BITE, player);
+            player->RemoveAura(SPELL_PHASE_QUEST_2);
+            creature->SetPhaseMask(4, 1);
+            creature->CastSpell(creature, SPELL_SUMMON_JOSIAH_AVERY);
+            creature->SetPhaseMask(2, 1);
+        }
+        return true;
+    }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_josiah_avery_p2AI (creature);
+    }
+
+    struct npc_josiah_avery_p2AI : public ScriptedAI
+    {
+        npc_josiah_avery_p2AI(Creature* creature) : ScriptedAI(creature) {}
+
+        uint32 tSay; // Time left for say
+        uint32 cSay; // Current Say
+
+		        // Evade or Respawn
+        void Reset()
+        {
+            tSay = DELAY_SAY_JOSIAH_AVERY; // Reset timer
+            cSay = 1;                              // Start from 1
+        }
+
+        //Timed events
+        void UpdateAI(uint32 const diff)
+        {
+            //Out of combat
+            if (!me->GetVictim())
+            {
+                //Timed say
+                if (tSay <= diff)
+                {
+                    switch (cSay)
+                    {
+                        default:
+                        case 1:
+                             Talk(SAY_JOSIAH_AVERY_1);
+                            cSay++;
+                            break;
+                        case 2:
+                             Talk(SAY_JOSIAH_AVERY_2);
+                            cSay++;
+                            break;
+                        case 3:
+                             Talk(SAY_JOSIAH_AVERY_3);
+                            cSay++;
+                            break;
+                        case 4:
+                             Talk(SAY_JOSIAH_AVERY_4);
+                            cSay++;
+                            break;
+                        case 5:
+                             Talk(SAY_JOSIAH_AVERY_5);
+                            cSay = 1; // Reset to 1
+                            break;							
+                    }
+
+                    tSay = DELAY_SAY_JOSIAH_AVERY; // Reset the timer
+                }
+                else
+                {
+                    tSay -= diff;
+                }
+                return;
+            }
+        }
+    };
+};
+
 /*######
 ## npc_josiah_avery_trigger
 ######*/
@@ -1753,7 +1627,7 @@ public:
             tEvent      = 0;
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             if (Creature* Lorna = me->FindNearestCreature(NPC_LORNA_CROWLEY_P4, 60.0f, true))
             if (Creature* BadAvery = me->FindNearestCreature(NPC_JOSIAH_AVERY_P4, 80.0f, true))
@@ -1821,95 +1695,6 @@ public:
     };
 };
 
-/* QUEST - 14159 - The Rebel Lord's Arsenal - START */
-// Phase 4
-
-/*######
-## npc_josiah_avery
-######*/
-class npc_josiah_avery : public CreatureScript
-{
-public:
-    npc_josiah_avery() : CreatureScript("npc_josiah_avery") {}
-
-    bool OnQuestReward(Player* player, Creature* creature, Quest const* quest, uint32 opt)
-    {
-        if (quest->GetQuestId() == QUEST_THE_REBEL_LORDS_ARSENAL)
-        {
-            creature->AddAura(SPELL_WORGEN_BITE, player);
-            player->RemoveAura(SPELL_PHASE_QUEST_2);
-            creature->SetPhaseMask(4, 1);
-            creature->CastSpell(creature, SPELL_SUMMON_JOSIAH_AVERY);
-            creature->SetPhaseMask(2, 1);
-        }
-        return true;
-    }
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_josiah_avery_p2AI (creature);
-    }
-
-    struct npc_josiah_avery_p2AI : public ScriptedAI
-    {
-        npc_josiah_avery_p2AI(Creature* creature) : ScriptedAI(creature) {}
-
-        uint32 tSay; // Time left for say
-        uint32 cSay; // Current Say
-
-		        // Evade or Respawn
-        void Reset()
-        {
-            tSay = DELAY_SAY_JOSIAH_AVERY; // Reset timer
-            cSay = 1;                              // Start from 1
-        }
-
-        //Timed events
-        void UpdateAI(const uint32 diff)
-        {
-            //Out of combat
-            if (!me->getVictim())
-            {
-                //Timed say
-                if (tSay <= diff)
-                {
-                    switch (cSay)
-                    {
-                        default:
-                        case 1:
-                             Talk(SAY_JOSIAH_AVERY_1);
-                            cSay++;
-                            break;
-                        case 2:
-                             Talk(SAY_JOSIAH_AVERY_2);
-                            cSay++;
-                            break;
-                        case 3:
-                             Talk(SAY_JOSIAH_AVERY_3);
-                            cSay++;
-                            break;
-                        case 4:
-                             Talk(SAY_JOSIAH_AVERY_4);
-                            cSay++;
-                            break;
-                        case 5:
-                             Talk(SAY_JOSIAH_AVERY_5);
-                            cSay = 1; // Reset to 1
-                            break;							
-                    }
-
-                    tSay = DELAY_SAY_JOSIAH_AVERY; // Reset the timer
-                }
-                else
-                {
-                    tSay -= diff;
-                }
-                return;
-            }
-        }
-    };
-};
-
 /*######
 ## npc_lorna_crowley_p4
 ######*/
@@ -1954,7 +1739,7 @@ public:
             me->GetCharmInfo()->SetIsFollowing(true);
         }
 
-        void UpdateAI(const uint32 diff) /*diff*/
+        void UpdateAI(uint32 const diff) /*diff*/
         {
             Player* player = me->GetOwner()->ToPlayer();
 
@@ -2024,7 +1809,7 @@ public:
             DoCast(me, SPELL_SHADOWSTALKER_STEALTH);
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             if (tSeek <= diff)
             {
@@ -2056,6 +1841,7 @@ public:
         }
     };
 };
+
 /*######
 ## spell_attack_lurker
 #####*/
@@ -2088,7 +1874,6 @@ class spell_attack_lurker : public SpellScriptLoader
 /*######
 ## npc_king_genn_greymane
 ######*/
-
 class npc_king_genn_greymane : public CreatureScript
 {
 public:
@@ -2135,7 +1920,7 @@ public:
             }
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             if (tSay <= diff) // Time for next spawn wave
             {
@@ -2158,6 +1943,179 @@ public:
             summoned->SetReactState(REACT_AGGRESSIVE);
         }
     };
+};
+
+enum GreyPaths
+{
+    PATH_THERE              = 3590700,
+    PATH_BACK               = 3590701,
+};
+
+/*######
+## npc_king_greymanes_horse
+######*/
+class npc_king_greymanes_horse : public CreatureScript
+{
+    struct npc_king_greymanes_horseAI : public ScriptedAI
+    {
+        npc_king_greymanes_horseAI(Creature* creature) : ScriptedAI(creature) {}
+
+        void Reset()
+        {
+            me->SetReactState(REACT_PASSIVE);
+            there = true;
+            playerGUID = 0;
+            krennanGUID = 0;
+        }
+
+        void EnterCombat(Unit *) { }
+
+        void PassengerBoarded(Unit* who, int8 seatId, bool apply)
+        {
+            if (apply)
+            {
+                if (seatId == 0) // player
+                {
+                    who->ToPlayer()->SetClientControl(me, 0); // hack
+
+                    playerGUID = who->GetGUID();
+                    who->CastSpell(who, SPELL_QUEST_DETECTION, true);
+                    me->GetMotionMaster()->Initialize();
+                    me->GetMotionMaster()->MovePath(PATH_THERE, false);
+                }
+                else if (seatId == 1) // krennan
+                {
+                    if (Player * player = me->GetPlayer(*me, playerGUID))
+                        player->KilledMonsterCredit(NPC_KRENNAN);
+                    krennanGUID = who->GetGUID();
+                    me->GetMotionMaster()->Initialize();
+                    me->GetMotionMaster()->MovePath(PATH_BACK, false);
+                }
+            }
+            else
+                if (Creature * krennan = me->GetCreature(*me, krennanGUID))
+                    krennan->DespawnOrUnsummon(5000);
+        }
+
+        void MovementInform(uint32 type, uint32 Id)
+        {
+            if (type == POINT_MOTION_TYPE)
+            {
+                if (Id == 0)
+                {
+                    there = false;
+                    Talk(0, playerGUID);
+                    if (Creature * krennan = me->FindNearestCreature(NPC_KRENNAN, 30.0f))
+                        krennan->AI()->Talk(0);
+                }
+            }
+            else if (type == WAYPOINT_MOTION_TYPE)
+            {
+                if (there)
+                {
+                    if (Id == 4)
+                    {
+                        me->GetMotionMaster()->Clear();
+                        me->GetMotionMaster()->MoveIdle();
+                        me->GetMotionMaster()->MoveJump(-1676.737427f, 1345.307495f, 15.135159f, 15.0f, 15.0f);
+                    }
+                }
+                else
+                    if (Id == 7)
+                        if (Vehicle * veh = me->GetVehicleKit())
+                            veh->RemoveAllPassengers();
+            }
+        }
+
+        void UpdateAI(const uint32) { }
+
+    private:
+        bool there;
+        uint64 playerGUID;
+        uint64 krennanGUID;
+    };
+
+public:
+    npc_king_greymanes_horse() : CreatureScript("npc_king_greymanes_horse") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_king_greymanes_horseAI(creature);
+    }
+};
+
+/*######
+## npc_krennan_aranas_c2
+######*/
+class npc_krennan_aranas_c2 : public CreatureScript
+{
+public:
+    npc_krennan_aranas_c2() : CreatureScript("npc_krennan_aranas_c2") { }
+
+    struct npc_krennan_aranas_c2AI : public ScriptedAI
+    {
+        npc_krennan_aranas_c2AI(Creature* creature) : ScriptedAI(creature) {}
+
+        void AttackStart(Unit* /*who*/) {}
+        void EnterCombat(Unit* /*who*/) {}
+        void EnterEvadeMode() {}
+		
+        bool Say;
+        bool Move;
+        bool Cast;
+        bool KrennanDead;
+        uint32 SayTimer;		
+
+        void Reset()
+        {
+            Say = false;
+            Move = true;
+            Cast = true;
+            KrennanDead = false;
+            SayTimer = 500;
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (Creature *krennan = me->FindNearestCreature(35753, 50))
+                if (!KrennanDead)
+                {
+                    krennan->DespawnOrUnsummon();
+                    KrennanDead = true;
+                }
+
+            if (Creature *horse = me->FindNearestCreature(35905, 20.0f))
+            {
+                if (Cast)
+                    DoCast(horse, 84275, true);
+
+                if (me->HasAura(84275))
+                    Cast = false;
+            }
+
+            if (!me->HasAura(84275) && Move)
+            {
+                me->NearTeleportTo(KRENNAN_END_X, KRENNAN_END_Y, KRENNAN_END_Z, KRENNAN_END_O);
+                Say = true;
+                Move = false;
+                SayTimer = 500;
+            }
+
+            if (Say && SayTimer <= diff)
+            {
+                me->DespawnOrUnsummon(6000);
+                Say = false;
+            }
+            else
+                SayTimer -= diff;
+        }
+
+    };
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_krennan_aranas_c2AI(creature);
+    }
 };
 
 /*######
@@ -2246,8 +2204,9 @@ public:
         if (quest->GetQuestId() == QUEST_SAVE_KRENNAN_ARANAS)
         {
             godfrey->AI()->Talk(SAY_LORD_GODFREY_P4);
-            player->RemoveAurasDueToSpell(SPELL_WORGEN_BITE);
+            player->RemoveAura(SPELL_WORGEN_BITE);
             godfrey->AddAura(SPELL_INFECTED_BITE, player);
+			player->RemoveAura(76642);// Only Infected bite aura should be added
             player->CastSpell(player, SPELL_GILNEAS_CANNON_CAMERA);
             player->SaveToDB();
             if (Creature* cannon = GetClosestCreatureWithEntry(godfrey, NPC_COMMANDEERED_CANNON, 50.0f))
@@ -2256,126 +2215,6 @@ public:
             }
         }
         return true;
-    }
-};
-
-
-/*######
-## npc_king_greymanes_horse
-######*/
-class npc_king_greymanes_horse : public CreatureScript
-{
-public:
-    npc_king_greymanes_horse() : CreatureScript("npc_king_greymanes_horse") { }
-
-    struct npc_greymane_horseAI : public npc_escortAI
-    {
-        npc_greymane_horseAI(Creature* creature) : npc_escortAI(creature) {}
-
-        void AttackStart(Unit* /*who*/) {}
-
-        void EnterEvadeMode() {}
-
-        void Reset()
-        {
-             krennansay = 500;
-             AfterJump = false;
-             me->AddUnitState(UNIT_STATE_IGNORE_PATHFINDING);
-             loop = true;
-        }
-
-        void PassengerBoarded(Unit* who, int8 /*seatId*/, bool apply)
-        {
-            if (who->GetTypeId() != TYPEID_PLAYER)
-                if (apply)
-                    loop = false;
-            if (!apply)
-            {
-                if (who->GetTypeId() != TYPEID_PLAYER)
-                {
-                    who->ToCreature()->AI()->Talk(0, 0);
-                    me->DespawnOrUnsummon();
-                }
-                else if (loop)
-                    me->DespawnOrUnsummon();
-            }
-        }
-
-        void MovementInform(uint32 type, uint32 point)
-        {
-            npc_escortAI::MovementInform(type, point);
-
-            if (type == EFFECT_MOTION_TYPE)
-                SetEscortPaused(false);
-        }
-
-        void WaypointReached(uint32 i)
-        {
-            Player* player = GetPlayerForEscort();
-
-            switch(i)
-            {
-                case 5:
-                    me->GetMotionMaster()->MoveJump(-1679.089f,1348.42f,15.31f,25.0f, 15.0f);
-                    AfterJump = true;
-                    if (me->GetVehicleKit()->HasEmptySeat(1))
-                    {
-                        SetEscortPaused(true);
-                        player->SetClientControl(me, 0);
-                        break;
-                    }
-                    else
-                    break;
-                case 9:
-                    if (loop)
-                        SetNextWaypoint(6, false, true);
-                    break;
-                case 13:
-                    player->ExitVehicle();
-                    player->SetClientControl(me, 1);
-                    break;
-            }
-        }
-
-        void JustDied(Unit* /*killer*/)
-        {
-            if (Player* player = GetPlayerForEscort())
-               player->FailQuest(QUEST_SAVE_KRENNAN_ARANAS);
-        }
-
-        void OnCharmed(bool /*apply*/)
-        {
-        }
-
-        void UpdateAI(const uint32 diff)
-        {
-            npc_escortAI::UpdateAI(diff);
-            Player* player = GetPlayerForEscort();
-
-            if (AfterJump && (me->IsWithinDist3d(-1679.089f, 1348.42f, 15.31f, 1.0f)))
-            {
-                Talk(0,player->GetGUID());
-                AfterJump = false;
-            }
-
-            if (krennansay <=diff)
-            {
-                if (Creature *krennan = me->FindNearestCreature(3871227, 30, true))
-                    krennansay = urand(4000,7000);
-            }
-            else
-                krennansay -= diff;
-        }
-
-    private:
-        uint32 krennansay;
-        bool AfterJump;
-        bool loop;
-    };
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_greymane_horseAI (creature);
     }
 };
 
@@ -2389,7 +2228,6 @@ public:
 
     bool OnQuestAccept(Player* player, Creature* creature, Quest const*_Quest)
     {
-		/*
         if (_Quest->GetQuestId() == QUEST_SACRIFICES)
         {
             if (Creature *horse = player->SummonCreature(35231, player->GetPositionX(), player->GetPositionY(),  player->GetPositionZ(),  player->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN))
@@ -2398,30 +2236,6 @@ public:
                 CAST_AI(npc_escortAI, (horse->AI()))->Start(false, true, player->GetGUID(), _Quest);
             }
         }
-		*/
-		for (int i = 0; i < 30; i++)
-			player->KilledMonsterCredit(51277, 0);
-
-        player->TeleportTo(638, -1550.76f, 1565.98f, 29.57f, 0.70f);
-        return true;
-    }
-};
-
-/*######
-## npc_tobias_mistmantle_q14218
-######*/
-class npc_tobias_mistmantle_q14218 : public CreatureScript
-{
-public:
-    npc_tobias_mistmantle_q14218() : CreatureScript("npc_tobias_mistmantle_q14218") { }
-
-    bool OnQuestAccept(Player* player, Creature* creature, Quest const* worgen_bquest)
-    {
-		if (worgen_bquest->GetQuestId() == 14218)
-		{
-			for (int i = 0; i < 40; i++)
-				player->KilledMonsterCredit(35229, 0);
-		}
         return true;
     }
 };
@@ -2565,134 +2379,6 @@ public:
 };
 
 /*######
-## npc_krennan_aranas_c2
-######*/
-class npc_krennan_aranas_c2 : public CreatureScript
-{
-public:
-    npc_krennan_aranas_c2() : CreatureScript("npc_krennan_aranas_c2") { }
-
-    struct npc_krennan_aranas_c2AI : public ScriptedAI
-    {
-        npc_krennan_aranas_c2AI(Creature* creature) : ScriptedAI(creature) {}
-
-        void AttackStart(Unit* /*who*/) {}
-        void EnterCombat(Unit* /*who*/) {}
-        void EnterEvadeMode() {}
-
-        void Reset()
-        {
-            Say = false;
-            Move = true;
-            Cast = true;
-            KrennanDead = false;
-            SayTimer = 500;
-        }
-
-        void UpdateAI(const uint32 diff)
-        {
-            if (Creature *krennan = me->FindNearestCreature(3871227, 50))
-                if (!KrennanDead)
-                {
-                    krennan->DespawnOrUnsummon();
-                    KrennanDead = true;
-                }
-
-            if (Creature *horse = me->FindNearestCreature(35905, 20.0f))
-            {
-                if (Cast)
-                    DoCast(horse, 84275, true);
-
-                if (me->HasAura(84275))
-                    Cast = false;
-            }
-
-            if (!me->HasAura(84275) && Move)
-            {
-                me->NearTeleportTo(KRENNAN_END_X, KRENNAN_END_Y, KRENNAN_END_Z, KRENNAN_END_O);
-                Say = true;
-                Move = false;
-                SayTimer = 500;
-            }
-
-            if (Say && SayTimer <= diff)
-            {
-                me->DespawnOrUnsummon(6000);
-                Say = false;
-            }
-            else
-                SayTimer -= diff;
-        }
-
-    private :
-        bool Say;
-        bool Move;
-        bool Cast;
-        bool KrennanDead;
-        uint32 SayTimer;
-
-    };
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_krennan_aranas_c2AI(creature);
-    }
-};
-
-/*######
-## spell_keg_placed
-######*/
-class spell_keg_placed : public SpellScriptLoader
-{
-    public:
-        spell_keg_placed() : SpellScriptLoader("spell_keg_placed") {}
-
-        class spell_keg_placed_AuraScript : public AuraScript
-        {
-            PrepareAuraScript(spell_keg_placed_AuraScript);
-
-            void HandleEffectApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
-            {
-                tick = urand(1, 4);
-                tickcount = 0;
-            }
-
-            void HandlePeriodic(AuraEffect const* aurEff)
-            {
-                PreventDefaultAction();
-                if (Unit* caster = GetCaster())
-                {
-                    if (tickcount > tick)
-                    {
-                        if (caster->GetTypeId() != TYPEID_PLAYER)
-                            return;
-                        caster->ToPlayer()->KilledMonsterCredit(36233, 0);
-                        if (Unit* target = GetTarget())
-                            target->Kill(target);
-                    }
-                    tickcount++;
-                }
-            }
-
-            void Register()
-            {
-                OnEffectApply += AuraEffectApplyFn(spell_keg_placed_AuraScript::HandleEffectApply, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
-                OnEffectPeriodic += AuraEffectPeriodicFn(spell_keg_placed_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_DUMMY);
-            }
-
-        private :
-            uint32 tick;
-            uint32 tickcount;
-
-        };
-
-        AuraScript* GetAuraScript() const
-        {
-            return new spell_keg_placed_AuraScript();
-        }
-};
-
-/*######
 ## npc_bloodfang_stalker_c1
 ######*/
 class npc_bloodfang_stalker_c1 : public CreatureScript
@@ -2749,12 +2435,12 @@ public:
             }
             else tEnrage -= diff;
 
-            if (me->getVictim()->GetTypeId() == TYPEID_PLAYER)
+            if (me->GetVictim()->GetTypeId() == TYPEID_PLAYER)
                 Miss = false;
-            else if (me->getVictim()->isPet())
+            else if (me->GetVictim()->isPet())
                 Miss = false;
-            else if (me->getVictim()->GetEntry() == NPC_NORTHGATE_REBEL_1)
-                if (me->getVictim()->GetHealthPct() < 90)
+            else if (me->GetVictim()->GetEntry() == NPC_NORTHGATE_REBEL_1)
+                if (me->GetVictim()->GetHealthPct() < 90)
                     Miss = true;
 
             if (Miss && tAnimate <= diff)
@@ -2818,7 +2504,8 @@ public:
             player->CastSpell(player, 68996, true);
             player->CastSpell(player, 69196, true);
             player->CastSpell(player, 72788, true);
-            player->CastSpell(player, 72794, true);
+            //player->CastSpell(player, 72794, true);
+			player->RemoveAura(72872);
             player->TeleportTo(loc);
         }
         return true;
@@ -2835,6 +2522,8 @@ public:
         return (player->GetQuestStatus(14375) != QUEST_STATUS_NONE || player->HasAura(68630));
     }
 };
+
+/*###### Start of DuskHaven ######*/
 
 /*######
 ## npc_trigger_event_c3
@@ -2913,7 +2602,6 @@ public:
     }
 };
 
-
 /*######
 ## npc_trigger_event_first_c3
 ######*/
@@ -2943,7 +2631,7 @@ public:
                 genn->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
             }
             endEvent = false;
-            mui_timer_event = 125000;
+            mui_timer_event = 12500;
             step = 0;
             me->GetMotionMaster()->MovePoint(42, -1819.72f, 2289.23f, 42.28f);
             waitingForEndMovement = false;
@@ -3067,6 +2755,160 @@ public:
     }
 };
 
+enum eHorrid
+{
+  SAY_BARREL    = 0
+};
+
+/* ######
+## You Can't Take 'Em Alone - 14348
+###### */
+class npc_horrid_abomination : public CreatureScript
+{
+public:
+    npc_horrid_abomination() : CreatureScript("npc_horrid_abomination") { }
+
+    CreatureAI* GetAI(Creature* creature) const
+    {
+        return new npc_horrid_abominationAI(creature);
+    }
+
+    struct npc_horrid_abominationAI : public ScriptedAI
+    {
+        npc_horrid_abominationAI(Creature* creature) : ScriptedAI(creature) {}
+
+        uint32 DieTimer;
+
+        void Reset ()
+        {
+            me->ClearUnitState(UNIT_STATE_ROOT | UNIT_STATE_STUNNED);
+            DieTimer = 5000;
+        }
+
+        void SpellHit(Unit* caster, const SpellInfo* spell)
+        {
+            if (spell->Id == SPELL_BARREL_KEG && caster->GetTypeId() == TYPEID_PLAYER && caster->ToPlayer()->GetQuestStatus(QUEST_YOU_CANT_TAKE_EM_ALONE) == QUEST_STATUS_INCOMPLETE)
+            {
+                caster->ToPlayer()->KilledMonsterCredit(QUEST_14348_KILL_CREDIT, 0);
+                me->AddUnitState(UNIT_STATE_ROOT | UNIT_STATE_STUNNED);
+                Talk(SAY_BARREL);
+
+            }
+        }
+
+        void UpdateAI(const uint32 diff)
+        {
+            if (DieTimer <= diff)
+            {
+                if (me->HasAura(SPELL_BARREL_KEG))
+                    me->DisappearAndDie();
+                else
+                    DieTimer = 1000;
+            }
+            else
+                DieTimer -= diff;
+
+            if (!UpdateVictim())
+                return;
+
+            DoMeleeAttackIfReady();
+        }
+    };
+};
+
+/*######
+## spell_keg_placed
+######*/
+class spell_keg_placed : public SpellScriptLoader
+{
+    public:
+        spell_keg_placed() : SpellScriptLoader("spell_keg_placed") {}
+
+        class spell_keg_placed_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_keg_placed_AuraScript);
+
+            void HandleEffectApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
+            {
+                tick = urand(1, 4);
+                tickcount = 0;
+            }
+
+            void HandlePeriodic(AuraEffect const* aurEff)
+            {
+                PreventDefaultAction();
+                if (Unit* caster = GetCaster())
+                {
+                    if (tickcount > tick)
+                    {
+                        if (caster->GetTypeId() != TYPEID_PLAYER)
+                            return;
+                        caster->ToPlayer()->KilledMonsterCredit(36233, 0);
+                        if (Unit* target = GetTarget())
+                            target->Kill(target);
+                    }
+                    tickcount++;
+                }
+            }
+
+            void Register()
+            {
+                OnEffectApply += AuraEffectApplyFn(spell_keg_placed_AuraScript::HandleEffectApply, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+                OnEffectPeriodic += AuraEffectPeriodicFn(spell_keg_placed_AuraScript::HandlePeriodic, EFFECT_0, SPELL_AURA_DUMMY);
+            }
+
+        private :
+            uint32 tick;
+            uint32 tickcount;
+
+        };
+
+        AuraScript* GetAuraScript() const
+        {
+            return new spell_keg_placed_AuraScript();
+        }
+};
+
+/*######
+## spell_round_up_horse
+######*/
+class spell_round_up_horse : public SpellScriptLoader
+{
+public:
+    spell_round_up_horse() : SpellScriptLoader("spell_round_up_horse") { }
+
+    class spell_round_up_horse_SpellScript : public SpellScript
+    {
+        PrepareSpellScript(spell_round_up_horse_SpellScript);
+
+        bool Validate(SpellInfo const* /*spellInfo*/)
+        {
+            if (!sSpellMgr->GetSpellInfo(68903))
+                return false;
+            return true;
+        }
+
+        void HandleEffectDummy(SpellEffIndex /*effIndex*/)
+        {
+            if (GetHitUnit()->GetTypeId() != TYPEID_UNIT || GetCaster()->GetTypeId() != TYPEID_PLAYER || GetCaster()->ToPlayer()->GetQuestStatus(14416) != QUEST_STATUS_INCOMPLETE)
+                return ;
+            GetHitUnit()->ToCreature()->DespawnOrUnsummon();
+        }
+
+        void Register()
+        {
+            OnEffectHitTarget += SpellEffectFn(spell_round_up_horse_SpellScript::HandleEffectDummy, EFFECT_1, SPELL_EFFECT_DUMMY);
+        }
+    };
+
+    SpellScript* GetSpellScript() const
+    {
+        return new spell_round_up_horse_SpellScript();
+    }
+};
+
+/*###### Quest Gasping for Breath  ######*/
+
 /*######
 ## spell_rescue_noyade
 ######*/
@@ -3123,43 +2965,9 @@ public:
     }
 };
 
-/*######
-## spell_round_up_horse
-######*/
-class spell_round_up_horse : public SpellScriptLoader
-{
-public:
-    spell_round_up_horse() : SpellScriptLoader("spell_round_up_horse") { }
+/*###### Quest Gasping for Breath END  ######*/
 
-    class spell_round_up_horse_SpellScript : public SpellScript
-    {
-        PrepareSpellScript(spell_round_up_horse_SpellScript);
-
-        bool Validate(SpellInfo const* /*spellInfo*/)
-        {
-            if (!sSpellMgr->GetSpellInfo(68903))
-                return false;
-            return true;
-        }
-
-        void HandleEffectDummy(SpellEffIndex /*effIndex*/)
-        {
-            if (GetHitUnit()->GetTypeId() != TYPEID_UNIT || GetCaster()->GetTypeId() != TYPEID_PLAYER || GetCaster()->ToPlayer()->GetQuestStatus(14416) != QUEST_STATUS_INCOMPLETE)
-                return ;
-            GetHitUnit()->ToCreature()->DespawnOrUnsummon();
-        }
-
-        void Register()
-        {
-            OnEffectHitTarget += SpellEffectFn(spell_round_up_horse_SpellScript::HandleEffectDummy, EFFECT_1, SPELL_EFFECT_DUMMY);
-        }
-    };
-
-    SpellScript* GetSpellScript() const
-    {
-        return new spell_round_up_horse_SpellScript();
-    }
-};
+/*###### Losing Your Tail ######*/
 
 /*######
 ## npc_trigger_quest_24616
@@ -3251,7 +3059,7 @@ public:
 
     bool OnGossipHello(Player* player, Creature* creature)
     {
-        if (creature->isQuestGiver())
+        if (creature->IsQuestGiver())
             player->PrepareQuestMenu(creature->GetGUID());
 
         if (player->GetQuestStatus(QUEST_THE_BATTLE_FOR_GILNEAS_CITY) == QUEST_STATUS_INCOMPLETE)
@@ -3780,7 +3588,7 @@ public:
             else
                 mui_spell2 -= diff;
 
-            victim = me->getVictim();
+            victim = me->GetVictim();
             if (victim && me->GetDistance2d(victim->GetPositionX(), victim->GetPositionY()) > 7)
                 DoSpellAttackIfReady(6660);
             else
@@ -3798,7 +3606,6 @@ public:
 /*######
 ## npc_lord_darius_crowley_gilneas
 ######*/
-
 class npc_lord_darius_crowley_gilneas : public CreatureScript
 {
 public:
@@ -4221,52 +4028,26 @@ public:
 	}
 };
 
-class npc_lorna_crowney_q24904: public CreatureScript
+/*######
+## npc_lord_godfrey_map
+######*/
+class npc_lord_godfrey_map : public CreatureScript
 {
 public:
-    npc_lorna_crowney_q24904() : CreatureScript("npc_lorna_crowney_q24904") {}
+    npc_lord_godfrey_map() : CreatureScript("npc_lord_godfrey_map") { }
+	bool OnQuestAccept(Player* player, Creature* creature, Quest const* quest)
+	{		
+        if (quest->GetQuestId() == 14396)
+            {
+              std::set<uint32> terrainswap;
+              std::set<uint32> phaseId;
+              terrainswap.insert(655);
+              phaseId.insert(1);
+              player->GetSession()->SendSetPhaseShift(phaseId, terrainswap);
+			}
 
-    bool OnQuestAccept(Player* player, Creature* creature, Quest const* worgen_cquest)
-    {
-		if (worgen_cquest->GetQuestId() == 24904)
-		{
-			CreatureTemplate const* cInfo1 = sObjectMgr->GetCreatureTemplate(38854);
-			player->KilledMonster(cInfo1, 0);
-			player->TeleportTo(654, -1661.29f, 1590.12f, 23.13f, 2.99f);
-		}
-        return true;
-    }
-};
-
-class npc_lorna_crowley_q26706: public CreatureScript
-{
-public:
-    npc_lorna_crowley_q26706() : CreatureScript("npc_lorna_crowley_q26706") {}
-
-    bool OnQuestAccept(Player* player, Creature* creature, Quest const* worgen_dquest)
-    {
-		if (worgen_dquest->GetQuestId() == 26706)
-		{
-			player->RemoveAllAuras();
-			player->TeleportTo(0, -8833.07f, 622.778f, 93.9317f, 0.6771f);
-		}
-        return true;
-    }
-};
-
-class npc_king_genn_greymane_q24438: public CreatureScript
-{
-public:
-    npc_king_genn_greymane_q24438() : CreatureScript("npc_king_genn_greymane_q24438") {}
-
-    bool OnQuestAccept(Player* player, Creature* creature, Quest const* worgen_equest)
-    {
-		if (worgen_equest->GetQuestId() == 24438)
-		{
-			player->TeleportTo(654, -2218.05f, 1809.99f, 12.47f, 3.134f);
-		}
-        return true;
-    }
+		return true;
+	}
 };
 
 void AddSC_gilneas()
@@ -4274,7 +4055,6 @@ void AddSC_gilneas()
 	new spell_attack_lurker();
 	new npc_admiral_nightwind();
     new npc_gilneas_city_guard_phase2();
-    new npc_prince_liam_greymane_phase1();
     new npc_prince_liam_greymane_phase2();
     new npc_rampaging_worgen();
     new npc_rampaging_worgen2();
@@ -4293,6 +4073,7 @@ void AddSC_gilneas()
     new npc_lord_darius_crowley_c3();
     new npc_king_genn_greymane();
     new npc_crowley_horse();
+	new npc_horrid_abomination();
     new spell_keg_placed();
     new npc_king_greymanes_horse();
     new npc_krennan_aranas_c2();
@@ -4325,9 +4106,5 @@ void AddSC_gilneas()
     new npc_chauve_souris_capture();
 	new npc_commandeered_cannon();
 	new npc_lord_godfrey_p4_8();
-	
-	new npc_lorna_crowney_q24904();
-	new npc_tobias_mistmantle_q14218();
-	new npc_lorna_crowley_q26706();
-	new npc_king_genn_greymane_q24438();
+	new npc_lord_godfrey_map();
 }

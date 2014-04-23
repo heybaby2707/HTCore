@@ -50,6 +50,7 @@ enum CreatureIds
     NPC_WORGEN_RUNT_C1                                = 35188, // Quest - By the skin of his teeth spawns
     NPC_WORGEN_RUNT_C2                                = 35456, // Quest - By the skin of his teeth spawns
 	NPC_COMMANDEERED_CANNON                           = 35914,
+	NPC_KRENNAN                                       = 35753
 };
 
 enum QuestIds
@@ -62,6 +63,8 @@ enum QuestIds
     QUEST_SACRIFICES                                   = 14212,
     QUEST_THE_BATTLE_FOR_GILNEAS_CITY                  = 24904,
 	QUEST_ROYAL_ORDERS                                 = 14099,
+    QUEST_14348_KILL_CREDIT                            = 36233,
+    QUEST_YOU_CANT_TAKE_EM_ALONE                       = 14348
 };
 
 enum SpellIds
@@ -89,7 +92,9 @@ enum SpellIds
 	SPELL_GILNEAS_CANNON_CAMERA                        = 93555,
 	SPELL_CANNON_FIRE                                  = 68235,
     SPELL_WORGEN_BITE                                  = 72870,
-    SPELL_INFECTED_BITE                                = 72872,	
+    SPELL_INFECTED_BITE                                = 72872,
+    SPELL_QUEST_DETECTION                              = 49416,
+    SPELL_BARREL_KEG                                   = 69094	
 };
 
 enum NpcTextIds

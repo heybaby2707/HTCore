@@ -239,7 +239,7 @@ public:
 
                         // the player wasn't able to move out of our range within 25 seconds
                         if (player->IsWithinDistInMap(me, RANGE_GUARDS_MARK))
-                            if (!lastSpawnedGuard->getVictim())
+                            if (!lastSpawnedGuard->GetVictim())
                             {
                                 lastSpawnedGuard->AI()->AttackStart(player);
                                 continue;
@@ -293,7 +293,7 @@ public:
                                 return;
 
                             // ROOFTOP only triggers if the player is on the ground
-                            if (!playerTarget->IsFlying() && !lastSpawnedGuard->getVictim())
+                            if (!playerTarget->IsFlying() && !lastSpawnedGuard->GetVictim())
                                 lastSpawnedGuard->AI()->AttackStart(playerTarget);
 
                             break;
@@ -1195,7 +1195,7 @@ public:
 
     bool OnGossipHello(Player* player, Creature* creature)
     {
-        if (creature->isQuestGiver())
+        if (creature->IsQuestGiver())
             player->PrepareQuestMenu(creature->GetGUID());
 
         bool canBuy = false;
@@ -1261,7 +1261,7 @@ public:
 
         if (canBuy)
         {
-            if (creature->isVendor())
+            if (creature->IsVendor())
                 player->ADD_GOSSIP_ITEM(GOSSIP_ICON_VENDOR, GOSSIP_TEXT_BROWSE_GOODS, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRADE);
             player->SEND_GOSSIP_MENU(player->GetGossipTextId(creature), creature->GetGUID());
         }
@@ -1293,10 +1293,10 @@ public:
 
     bool OnGossipHello(Player* player, Creature* creature)
     {
-        if (creature->isQuestGiver())
+        if (creature->IsQuestGiver())
             player->PrepareQuestMenu(creature->GetGUID());
 
-        if (creature->isTrainer())
+        if (creature->IsTrainer())
             player->ADD_GOSSIP_ITEM(GOSSIP_ICON_TRAINER, GOSSIP_TEXT_TRAIN, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRAIN);
 
         if (creature->isCanTrainingAndResetTalentsOf(player))
@@ -1399,7 +1399,7 @@ public:
 
     bool OnGossipHello(Player* player, Creature* creature)
     {
-        if (creature->isQuestGiver())
+        if (creature->IsQuestGiver())
             player->PrepareQuestMenu(creature->GetGUID());
 
         if (player->HasSpellCooldown(SPELL_INT) ||
@@ -1666,7 +1666,7 @@ public:
             me->SetStatFloatValue(UNIT_FIELD_RANGED_ATTACK_POWER, float(Info->attackpower));
 
             // Start attacking attacker of owner on first ai update after spawn - move in line of sight may choose better target
-            if (!me->getVictim() && me->isSummon())
+            if (!me->GetVictim() && me->isSummon())
                 if (Unit* Owner = me->ToTempSummon()->GetSummoner())
                     if (Owner->getAttackerForHelper())
                         AttackStart(Owner->getAttackerForHelper());
@@ -1675,7 +1675,7 @@ public:
         //Redefined for random target selection:
         void MoveInLineOfSight(Unit* who)
         {
-            if (!me->getVictim() && me->canCreatureAttack(who))
+            if (!me->GetVictim() && me->canCreatureAttack(who))
             {
                 if (me->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
                     return;
@@ -1698,7 +1698,7 @@ public:
             if (!UpdateVictim())
                 return;
 
-            if (me->getVictim()->HasBreakableByDamageCrowdControlAura(me))
+            if (me->GetVictim()->HasBreakableByDamageCrowdControlAura(me))
             {
                 me->InterruptNonMeleeSpells(false);
                 return;
@@ -2406,6 +2406,7 @@ public:
 ######*/
 #define GLYPH_OF_SHADOWFIEND_MANA         58227
 #define GLYPH_OF_SHADOWFIEND              58228
+#define SHADOW_LEECH                      28305
 
 class npc_shadowfiend : public CreatureScript
 {
@@ -2414,7 +2415,10 @@ class npc_shadowfiend : public CreatureScript
 
         struct npc_shadowfiendAI : public PetAI
         {
-            npc_shadowfiendAI(Creature* creature) : PetAI(creature) {}
+            npc_shadowfiendAI(Creature* creature) : PetAI(creature)
+            {
+                DoCast(me, SHADOW_LEECH, true);
+            }
 
             void JustDied(Unit* /*killer*/)
             {
@@ -2680,7 +2684,7 @@ public:
 
     bool OnGossipHello(Player* player, Creature* creature)
     {
-        if (creature->isQuestGiver())
+        if (creature->IsQuestGiver())
             player->PrepareQuestMenu(creature->GetGUID());
 
         if (player->getClass() == CLASS_HUNTER)
@@ -3346,6 +3350,8 @@ public:
 
            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE|UNIT_FLAG_NON_ATTACKABLE);
            me->SetReactState(REACT_PASSIVE);
+           me->AddUnitState(UNIT_STATE_ROOT);
+           me->StopMoving();
 
            me->CastSpell(me, 85526, true);
 
@@ -3394,6 +3400,87 @@ public:
    }
 };
 
+// Gurthalak, Voice of the Deeps - Tentacles Attack
+// TODO: Tentacles should not move / Gain Damage spell calculation from AP/STRG (Spell 52586)
+class npc_Tentacle_of_the_Old_Ones : public CreatureScript
+{
+    public:
+        npc_Tentacle_of_the_Old_Ones() : CreatureScript("npc_Tentacle_of_the_Old_Ones") { }
+
+        struct npc_Tentacle_of_the_Old_OnesAI : CasterAI
+        {
+            npc_Tentacle_of_the_Old_OnesAI(Creature* creature) : CasterAI(creature) {}
+
+            uint32 Mindflays_Timer;			
+			
+            void InitializeAI()
+            {
+                CasterAI::InitializeAI();
+                Unit* owner = me->GetOwner();
+                if (!owner)
+                    return;
+
+                me->SetReactState(REACT_AGGRESSIVE);
+            }
+
+        void UpdateAI(const uint32 diff) 
+		{ 
+               if (!UpdateVictim())
+               return;
+
+           if(Mindflays_Timer<= diff)
+               {
+             DoCast(me->GetVictim(),52586);
+                     Mindflays_Timer = 6000;          
+               }else Mindflays_Timer -= diff;		
+		}
+        void EnterCombat(Unit* /*who*/)
+		{ 
+		  DoCast(me->GetVictim(),52586);
+		}			
+			
+        };
+
+        CreatureAI* GetAI(Creature* creature) const
+        {
+            return new npc_Tentacle_of_the_Old_OnesAI(creature);
+        }
+};
+
+class npc_remove_phase_auras : public CreatureScript
+{
+public:
+    npc_remove_phase_auras() : CreatureScript("npc_remove_phase_auras") { }
+
+    bool OnGossipHello(Player* player, Creature* creature)
+	{
+
+		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "I do not see anyone, help me!" , GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+
+		player->PlayerTalkClass->SendGossipMenu(724007, creature->GetGUID());
+
+		return true;
+
+	}
+
+	bool OnGossipSelect(Player* player, Creature* /*creature*/, uint32 /*sender*/, uint32 action)
+	{
+		player->PlayerTalkClass->ClearMenus();
+
+		switch (action)
+		{
+		case GOSSIP_ACTION_INFO_DEF + 1:
+		{
+			player->RemoveAurasByType(SPELL_AURA_PHASE);
+		}
+			break;
+		}
+
+		player->PlayerTalkClass->SendCloseGossip();
+		return true;
+        }
+};
+
 void AddSC_npcs_special()
 {
     new npc_air_force_bots();
@@ -3435,4 +3522,6 @@ void AddSC_npcs_special()
     new npc_fungal_growth_two();
     new npc_consecration();
     new npc_melee_guardian();
+	new npc_Tentacle_of_the_Old_Ones();
+	new npc_remove_phase_auras();
 }

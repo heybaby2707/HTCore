@@ -139,7 +139,7 @@ class boss_anraphet : public CreatureScript
             BossAI::JustDied(killer);
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             if(intro)
             {
@@ -189,7 +189,7 @@ class boss_anraphet : public CreatureScript
                 case EVENT_ALPHA_BEAMS_END:
                     events.SetPhase(PHASE_NORMAL);
                     me->SetReactState(REACT_AGGRESSIVE);
-                    if(Unit * victim = me->getVictim())
+                    if(Unit * victim = me->GetVictim())
                     {
                         me->SetUInt64Value(UNIT_FIELD_TARGET, victim->GetGUID());
                         DoStartMovement(victim);
@@ -261,7 +261,7 @@ class npc_air_warden_hoo : public CreatureScript
                 instance->SetData(DATA_AIR_WARDEN, DONE);
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             if(!UpdateVictim())
                 return;
@@ -367,9 +367,7 @@ class npc_whirling_winds_hoo : public CreatureScript
             }
         }
 
-        void UpdateAI(const uint32 /*diff*/)
-        {
-        }
+
 
     private:
         uint64 currentTarget;
@@ -414,7 +412,7 @@ class npc_earth_warden_hoo : public CreatureScript
                 instance->SetData(DATA_EARTH_WARDEN, DONE);
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             if(!rockWave && !UpdateVictim())
                 return;
@@ -428,7 +426,7 @@ class npc_earth_warden_hoo : public CreatureScript
                 {
                     rockWave = false;
                     me->SetReactState(REACT_AGGRESSIVE);
-                    if(Unit * victim = me->getVictim())
+                    if(Unit * victim = me->GetVictim())
                     {
                         me->SetUInt64Value(UNIT_FIELD_TARGET, victim->GetGUID());
                         DoStartMovement(victim);
@@ -502,7 +500,7 @@ class npc_flame_warden_hoo : public CreatureScript
                     instance->SetData(DATA_FLAME_WARDEN, 1);
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             if(!UpdateVictim())
                 return;
@@ -611,7 +609,7 @@ class npc_water_warden_hoo : public CreatureScript
             DoCast(me, SPELL_AQUA_BOMB_AURA, true);
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             if(!UpdateVictim())
                 return;
@@ -678,18 +676,6 @@ class npc_water_bubble_hoo : public CreatureScript
             me->DespawnOrUnsummon(20000);
         }
 
-        void UpdateAI(const uint32 /*diff*/)
-        {
-            /*if(checkTimer <= diff)
-            {
-                Unit * summoner = me->GetUnit(*me, summonerGUID);
-
-                if(!summoner || !summoner->isAlive() || !summoner->IsInWorld())
-                    me->DespawnOrUnsummon();
-                checkTimer = 10000;
-            }else checkTimer -= diff;*/
-        }
-
     private:
         uint64 summonerGUID;
         uint32 checkTimer;
@@ -752,7 +738,7 @@ class npc_brann_bronzebeard_hoo : public CreatureScript
             }
         }
 
-        void UpdateAI(const uint32 diff)
+        void UpdateAI(uint32 const diff)
         {
             if(!EventInProgress)
                 return;

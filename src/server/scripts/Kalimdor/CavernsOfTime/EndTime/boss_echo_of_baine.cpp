@@ -1,264 +1,318 @@
-/* ScriptData
-SDName: boss_echo_of_baine.cpp
-SD%Complete: 90%
-SDCategory: endtime
-EndScriptData */
-
-// HELP me, correct the timers to cast for boss.
 #include "ScriptPCH.h"
-#include "ObjectMgr.h"
+#include "end_time.h"
+#include "Vehicle.h"
+#include "Unit.h"
 #include "ScriptMgr.h"
 #include "ScriptedCreature.h"
-#include "InstanceScript.h"
+#include "ScriptedGossip.h"
+#include "ScriptedEscortAI.h"
+#include "Cell.h"
+#include "CellImpl.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"
+#include "CombatAI.h"
+#include "PassiveAI.h"
+#include "ObjectMgr.h"
+#include "SpellInfo.h"
 #include "SpellScript.h"
 #include "SpellAuraEffects.h"
-#include "GridNotifiers.h"
+#include "SpellAuras.h"
+#include "CreatureTextMgr.h"
+#include "Vehicle.h"
+#include "VehicleDefines.h"
+#include "Spell.h"
 #include "Player.h"
-#include "ObjectAccessor.h"
-#include "endtime.h"
+#include "Map.h"
+#include "InstanceScript.h"
 
-enum Text
+enum Yells
 {
-    INTRO_NOZDORMU                      = 0, // The undying flames are all that remain of this sacred place. I sense much anger here...a seething rage, barely held in check. Be on your guard
-    INTRO_NOZDORMU_2                    = 1, // You must give peace to these lands if you are to face Murozond.
-    INTRO_BAINE							= 0,
-    SAY_AGGRO                           = 1, // What dark horrors have you brought in this place? By my ancestors honor - I shall take you to task!
-    SAY_PULVERIZE                       = 2, // There will be no escape!
-    SAY_PULVERIZE_2                     = 3, // ENOUGH! I WILL NO LONGER BE CONTAINED!
-    SAY_KILL                            = 4, // This is the price you pay.
-    SAY_KILL_2                          = 5, // A just punishment!
-    SAY_KILL_3							= 6, // Suffer for your arrogance!
-    SAY_DEATH                           = 7, // Where... is this place? What... have I done? Forgive me, my father... 
-};
-
-enum Phases
-{
-    ON_COMBAT,
-};
-
-enum EVENTS
-{
-    EVENT_INTRO_NOZDORMU_1		= 1,
-    EVENT_INTRO_NOZDORMU_2		= 2,
-    EVENT_INTRO_NOZDORMU_3		= 3,
-    EVENT_INTRO_BAINE_1			= 4,
-
-    EVENT_PULVERIZE 			= 5,
-    EVENT_PULVERIZE2 			= 6,
-
-    EVENT_TOTEM					= 7,
-    EVENT_MOLTENBLAST			= 8,
-
+    SAY_INTRO = 1,
+    SAY_AGGRO,
+    SAY_DEATH,
+    SAY_KILL_1,
+    SAY_KILL_2,
+    SAY_KILL_3,
+    SAY_THROW_TOTEM,
+    SAY_PULVERIZE,
 };
 
 enum Spells
 {
-    SPELL_TOTEM    				   = 101614,
-    SPELL_MOLTENBLAST   		   = 101840,
-    SPELL_PULVERIZE		           = 101625,
-    SPELL_PULVERIZE_1	           = 101626,
-    SPELL_PULVERIZE_2	           = 101627,
+    SPELL_BAINE_VIS   = 101624, // Visuals on boss (the totems on the back etc.)
+    SPELL_BAINE_AXE_VIS = 101834,
 
+    SPELL_THROW_TOTEM = 101615, // Triggers missile at location, with summon totem and kb.
+    SPELL_PULVERIZE_J = 101626, // Jump b. target, activate platform.
+    SPELL_PULVERIZE_D = 101627, // Damage spell.
+    SPELL_PULV_DBM    = 101625, // DBM says this, fuck it.
+    SPELL_MOLTEN_AXE  = 101836, // Extra damage on melee attack, change targets from caster to target. When he falls into lava after Pulverize.
+    SPELL_MOLTEN_FIST = 101866, // Extra dmg on melee for players when they touch the lava, they get this when baine gets Molten Axe.
+
+    SPELL_TB_TOTEM    = 101603, // Throw totem back at Baine on click.
+    SPELL_TB_TOTEM_A  = 107837, // Visual aura: player has totem to throw.
 };
 
-class Platformreset
+enum Events
 {
-public:
-    Platformreset() { }
-
-    bool operator()(GameObject* go)
-    {
-        switch (go->GetEntry())
-        {
-        case BAINE_PLATFORM_1:
-        case BAINE_PLATFORM_2:
-        case BAINE_PLATFORM_3:
-        case BAINE_PLATFORM_4:
-            go->GetGUID();
-            go->SetDestructibleState(GO_DESTRUCTIBLE_REBUILDING);
-            break;
-        default:
-            break;
-        }
-
-        return false;
-    }
+    EVENT_PULVERIZE = 1,
+    EVENT_PULVERIZE_DAMAGE,
+    EVENT_THROW_TOTEM,
 };
+
+enum Creatures
+{
+    NPC_ROCK_ISLAND      = 54496,
+    NPC_WALL_OF_FLAME    = 203006,
+    NPC_PUL_LOCATION     = 70024,
+    NPC_BAINE            = 54431,
+};
+
+#define SAY_INTRO_CHAT "What dark horrors have you wrought in this place? By my ancestors' honor. I shall take you to task!"
+#define SAY_LAVA_CHAT "My wrath knows no bounds!"
+#define SAY_LAVA2_CHAT "There will be no escape!"
+#define SAY_TEST "TEST"
+#define SAY_DIE_CHAT "Where... is this place? What... have i done? Forgive me, my father..."
 
 class boss_echo_of_baine : public CreatureScript
 {
-public:
-    boss_echo_of_baine() : CreatureScript("boss_echo_of_baine") { }
+    public:
+        boss_echo_of_baine() : CreatureScript("boss_echo_of_baine") { }
 
-    struct boss_echo_of_baineAI : public BossAI
-    {
-        boss_echo_of_baineAI(Creature* pCreature) : BossAI(pCreature, DATA_ECHO_OF_BAINE)
+        struct boss_echo_of_baineAI : public BossAI
         {
-            me->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
-            me->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_GRIP, true);
-        }
-
-
-
-        uint32 platform;
-        uint8 _phase;
-        uint32 phase;
-        void Reset()
-        {
-            _Reset();
-            Platformreset reset;
-            Trinity::GameObjectWorker<Platformreset> worker(me, reset);
-        }
-
-        void KilledUnit(Unit* /*who*/)
-        {
-            Talk (RAND(SAY_KILL, SAY_KILL_2, SAY_KILL_3));
-        }
-
-        void EnterCombat(Unit* /*who*/)
-        {
-            Talk(SAY_AGGRO);
-            _EnterCombat();
-            instance->SendEncounterUnit(ENCOUNTER_FRAME_ENGAGE, me, 1);
-            events.ScheduleEvent(EVENT_PULVERIZE, 4500, 0, ON_COMBAT);
-            events.ScheduleEvent(EVENT_TOTEM, 3000, 0, ON_COMBAT);
-            events.ScheduleEvent(EVENT_MOLTENBLAST, 3000, 0, ON_COMBAT);
-        }
-
-        void JustDied(Unit* killer)
-        {
-            instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
-            instance->SetBossState(DATA_ECHO_OF_BAINE, DONE);
-            Talk(SAY_DEATH);
-            _JustDied();
-        }
-
-        void JustReachedHome()
-        {
-            instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me);
-            _JustReachedHome();
-            instance->SetBossState(DATA_ECHO_OF_BAINE, FAIL);
-
-            Platformreset reset;
-            Trinity::GameObjectWorker<Platformreset> worker(me, reset);
-            me->VisitNearbyGridObject(333.0f, worker);
-        }
-
-
-        void UpdateAI(uint32 const diff)
-        {
-            if (!UpdateVictim())
-                return;
-            events.Update(diff);
-            if (!instance)
-                return;
-
-            if (me->HasUnitState(UNIT_STATE_CASTING))
-                return;
-
-            while (uint32 eventId = events.ExecuteEvent())
+            boss_echo_of_baineAI(Creature* creature) : BossAI(creature, BOSS_ECHO_OF_BAINE)
             {
-                switch (eventId)
+                introDone = false;
+                instance = me->GetInstanceScript();
+            }
+
+            InstanceScript* instance;
+            bool introDone;
+            Unit* pulverizeTarget;
+            EventMap events;
+
+            void Reset()
+            {
+                events.Reset();
+
+                me->SetReactState(REACT_AGGRESSIVE);
+
+                if (GameObject* go = me->FindNearestGameObject(NPC_WALL_OF_FLAME, 500.0f))
+                    go->Delete();
+
+                if (instance) // Open the doors.
                 {
-                case EVENT_PULVERIZE:
-                    Talk(RAND(SAY_PULVERIZE, SAY_PULVERIZE_2));
-                    if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM))
-                    {
-                        DoCast(pTarget, SPELL_PULVERIZE);
-                        DoCast(pTarget, SPELL_PULVERIZE_1);
-                    }
-                    events.ScheduleEvent(EVENT_PULVERIZE2, 3500, 0, ON_COMBAT);
-                    events.ScheduleEvent(EVENT_PULVERIZE, 40000, 0, ON_COMBAT);
-                    break;
-                case EVENT_PULVERIZE2:
-                    DoCast(SPELL_PULVERIZE_2);
-                    break;
-                case EVENT_TOTEM:
-                    if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM))
-                    {
-                        DoCast(pTarget, SPELL_TOTEM);
-                    }
-                    events.ScheduleEvent(EVENT_TOTEM, 25000, 0, ON_COMBAT);
-                    break;
-                case EVENT_MOLTENBLAST:
-                    if (Unit* pTarget = SelectTarget(SELECT_TARGET_RANDOM))
-                    {
-                        DoCast(101840);
-                    }
-                    events.ScheduleEvent(EVENT_MOLTENBLAST, 10000, 0, ON_COMBAT);
-                    break;
-                default:
-                    break;
+                    instance->SetBossState(BOSS_ECHO_OF_BAINE, NOT_STARTED);
+                    instance->HandleGameObject(4001, true);
+                    instance->HandleGameObject(4002, true);
+                }
+
+                if(GameObject* platform = me->FindNearestGameObject(209693, 500.0f))
+                    platform->SetDestructibleState(GO_DESTRUCTIBLE_REBUILDING);
+                else if(GameObject* platform = me->FindNearestGameObject(209694, 500.0f))
+                    platform->SetDestructibleState(GO_DESTRUCTIBLE_REBUILDING);
+                else if(GameObject* platform = me->FindNearestGameObject(209695, 500.0f))
+                    platform->SetDestructibleState(GO_DESTRUCTIBLE_REBUILDING);
+                else if(GameObject* platform = me->FindNearestGameObject(209670, 500.0f))
+                    platform->SetDestructibleState(GO_DESTRUCTIBLE_REBUILDING);
+
+                std::list<Creature*> creatures;
+                GetCreatureListWithEntryInGrid(creatures, me, 54434, 1000.0f);
+                if (!creatures.empty())
+                    for (std::list<Creature*>::iterator iter = creatures.begin(); iter != creatures.end(); ++iter)
+                         (*iter)->DespawnOrUnsummon();
+
+                if (!me->HasAura(SPELL_BAINE_VIS))
+                    DoCast(me, SPELL_BAINE_VIS);
+            }
+
+            void EnterEvadeMode()
+            {
+                me->GetMotionMaster()->MoveTargetedHome();
+                Reset();
+
+                me->SetHealth(me->GetMaxHealth());
+
+                if (instance)
+                {
+                    instance->SetBossState(BOSS_ECHO_OF_BAINE, FAIL);
+                    instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me); // Remove
+                }
+
+                _EnterEvadeMode();
+            }
+
+            void MoveInLineOfSight(Unit* who)
+            {
+                if (introDone)
+                    return;
+
+                if (!me->IsWithinDistInMap(who, 40.0f, false))
+                    return;
+
+                Talk(SAY_INTRO);
+                introDone = true;
+            }
+
+            void JustDied(Unit* killer)
+            {
+                Talk(SAY_DEATH);
+                me->MonsterYell(SAY_DIE_CHAT,0,0);
+
+                if (GameObject* go = me->FindNearestGameObject(NPC_WALL_OF_FLAME, 500.0f))
+                    go->Delete();
+
+                if (instance)
+                {
+                    instance->SetBossState(BOSS_ECHO_OF_BAINE, DONE);
+
+                    instance->SetData(DATA_BAINE, DONE);
+
+                    instance->HandleGameObject(4001, true); // Open the doors.
+                    instance->HandleGameObject(4002, true);
+
+                    instance->SendEncounterUnit(ENCOUNTER_FRAME_DISENGAGE, me); // Remove
                 }
             }
-            DoMeleeAttackIfReady();
+
+            void KilledUnit(Unit * /*victim*/)
+            {
+                Talk(RAND(SAY_KILL_1, SAY_KILL_2, SAY_KILL_3));
+            }
+
+            void EnterCombat(Unit* /*who*/)
+            {
+                Talk(SAY_AGGRO);
+                me->MonsterYell(SAY_INTRO_CHAT,0,0);
+
+                me->SummonGameObject(NPC_WALL_OF_FLAME,4383.0908f,1394.9914f,129.504f,4.849097f,0,0,0,0,9000000);
+
+                if (instance)
+                {
+                    instance->SetBossState(BOSS_ECHO_OF_BAINE, IN_PROGRESS);
+                    instance->SendEncounterUnit(ENCOUNTER_FRAME_ENGAGE, me); // Add
+
+                    instance->HandleGameObject(4001, false); // Close doors.
+                    instance->HandleGameObject(4002, false);
+                }
+
+                events.ScheduleEvent(EVENT_PULVERIZE, 30000);
+                events.ScheduleEvent(EVENT_THROW_TOTEM, 10000);
+            }
+
+            void UpdateAI(const uint32 diff)
+            {
+                if (!UpdateVictim() || me->HasUnitState(UNIT_STATE_CASTING))
+                    return;
+
+                if (me->HasAura(SPELL_MOLTEN_AXE) && !me->HasAura(SPELL_BAINE_AXE_VIS))
+                    DoCast(me, SPELL_BAINE_AXE_VIS);
+                else if (!me->HasAura(SPELL_MOLTEN_AXE) && me->HasAura(SPELL_BAINE_AXE_VIS))
+                    me->RemoveAurasDueToSpell(SPELL_BAINE_AXE_VIS);
+
+                if (me->IsInWater() && !me->HasAura(SPELL_MOLTEN_AXE))
+                    DoCast(me, SPELL_MOLTEN_AXE);
+
+                Map::PlayerList const &PlayerList = me->GetMap()->GetPlayers();
+                if (!PlayerList.isEmpty())
+                    for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                        if (Player* playr = i->getSource())
+                            if (playr->IsInWater() && !playr->HasAura(SPELL_MOLTEN_FIST))
+                                playr->AddAura(SPELL_MOLTEN_FIST, playr); // Add the damage aura to players in Magma.
+
+                events.Update(diff);
+
+                while (uint32 eventId = events.ExecuteEvent())
+                {
+                    switch (eventId)
+                    {
+                        case EVENT_PULVERIZE_DAMAGE:
+                            if(GameObject* platform = me->FindNearestGameObject(209693, 10.0f))
+                                platform->SetDestructibleState(GO_DESTRUCTIBLE_DESTROYED);
+                            else if(GameObject* platform = me->FindNearestGameObject(209694, 10.0f))
+                                platform->SetDestructibleState(GO_DESTRUCTIBLE_DESTROYED);
+                            else if(GameObject* platform = me->FindNearestGameObject(209695, 10.0f))
+                                platform->SetDestructibleState(GO_DESTRUCTIBLE_DESTROYED);
+                            else if(GameObject* platform = me->FindNearestGameObject(209670, 10.0f))
+                                platform->SetDestructibleState(GO_DESTRUCTIBLE_DESTROYED);
+                            if (Creature * target = me->FindNearestCreature(NPC_PUL_LOCATION, 100.0f))
+                                DoCast(target, SPELL_PULVERIZE_D);
+                            break;
+
+                        case EVENT_THROW_TOTEM:
+                            Talk(SAY_THROW_TOTEM);
+                            if (Unit* target = SelectTarget(SELECT_TARGET_RANDOM, 0, 100.0f, true)) // SELECT_TARGET_RANDOM, 0, urand(10.0f, 100.0f), true)
+                            {
+                                DoCast(target, SPELL_THROW_TOTEM);
+                            }
+                            events.ScheduleEvent(EVENT_THROW_TOTEM, 25000); // every 25 secs.
+                            break;
+
+                        case EVENT_PULVERIZE:
+                            me->MonsterYell(urand(0,1) == 1 ? SAY_LAVA_CHAT : SAY_LAVA2_CHAT,0,0);
+                            Talk(SAY_PULVERIZE);
+
+                            if (Creature * target = me->FindNearestCreature(NPC_PUL_LOCATION, 250.0f))
+                            {
+                                me->CastSpell(target,SPELL_PULV_DBM,true);
+                            }
+
+                            events.ScheduleEvent(EVENT_PULVERIZE, 40000); // every 40 secs.
+                            events.ScheduleEvent(EVENT_PULVERIZE_DAMAGE, 3000); // You have 3 secs to run.
+                            break;
+                    }
+                }
+
+                DoMeleeAttackIfReady();
+            }
+        };
+
+        CreatureAI* GetAI(Creature* creature) const
+        {
+            return new boss_echo_of_baineAI(creature);
         }
-    };
-
-    CreatureAI* GetAI(Creature* pCreature) const
-    {
-        return new boss_echo_of_baineAI(pCreature);
-    }
-
 };
 
-class npc_nozdormu_baine : public CreatureScript
+class baint_totem : public CreatureScript
 {
-public:
-    npc_nozdormu_baine() : CreatureScript("npc_nozdormu_baine") { }
+    public:
+        baint_totem() : CreatureScript("baint_totem") { }
 
-    struct npc_nozdormu_baineAI : public ScriptedAI
-    {
-        npc_nozdormu_baineAI(Creature* creature) : ScriptedAI(creature), pInstance(creature->GetInstanceScript()) { }
-
-        void IsSummonedBy(Unit* /*summoner*/)
+        struct baint_totemAI : public ScriptedAI
         {
-            _events.ScheduleEvent(EVENT_INTRO_NOZDORMU_1, 2500);
-        }
+            baint_totemAI(Creature* creature) : ScriptedAI(creature) { }
+            bool totem;
 
-        void UpdateAI(const uint32 diff)
-        {
-            _events.Update(diff);
-
-            while (uint32 eventId = _events.ExecuteEvent())
+            void Reset()
             {
-                switch (eventId)
-                {
-                case EVENT_INTRO_NOZDORMU_1:
-                    Talk(INTRO_NOZDORMU);
-                    _events.ScheduleEvent(EVENT_INTRO_NOZDORMU_2, 10000);
-                    break;
-                case EVENT_INTRO_NOZDORMU_2:
-                    Talk(INTRO_NOZDORMU_2);
-                    _events.ScheduleEvent(EVENT_INTRO_BAINE_1, 6000);
-                    break;
-                case EVENT_INTRO_BAINE_1:
-                    if (Creature* pBaine = me->GetCreature(*me, uiBaine))
-                        pBaine->AI()->Talk(INTRO_BAINE);
-                    _events.ScheduleEvent(EVENT_INTRO_NOZDORMU_3, 6000);
-                    break;
-                case EVENT_INTRO_NOZDORMU_3:
-                    me->DespawnOrUnsummon();
-                    break;
-
-                }
+                totem = true;
             }
+
+            void DamageTaken(Unit* /*attacker*/, uint32& damage)
+            {
+                me->setFaction(2110);
+                if (Creature * boss = me->FindNearestCreature(NPC_BAINE, 300.0f))
+                    if (totem)
+                    {
+                        DoCast(boss, SPELL_TB_TOTEM);
+                        me->DespawnOrUnsummon(1000);
+                        totem = false;
+                    }
+            }
+
+            private:
+                EventMap events;
+        };
+
+        CreatureAI* GetAI(Creature* creature) const
+        {
+            return new baint_totemAI(creature);
         }
-
-    protected:
-        EventMap _events;
-        InstanceScript* pInstance;
-        uint64 uiBaine;
-    };
-
-    CreatureAI* GetAI(Creature* creature) const
-    {
-        return new npc_nozdormu_baineAI(creature);
-    }
 };
 
 void AddSC_boss_echo_of_baine()
 {
     new boss_echo_of_baine();
-    new npc_nozdormu_baine();
+    new baint_totem();
 }
