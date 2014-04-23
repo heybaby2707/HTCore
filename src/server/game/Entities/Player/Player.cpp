@@ -442,6 +442,7 @@ KillRewarder::KillRewarder(Player* killer, Unit* victim, bool isBattleGround) :
         _isPvP = !victim->IsVehicle();
 
     _InitGroupData();
+    _isHonnor = false;
 }
 
 inline void KillRewarder::_InitGroupData()
@@ -490,7 +491,7 @@ inline void KillRewarder::_RewardHonor(Player* player)
 {
     // Rewarded player must be alive.
     if (player->isAlive())
-        player->RewardHonor(_victim, _count, -1, true);
+        _isHonnor = player->RewardHonor(_victim, _count, -1, true);
 }
 
 inline void KillRewarder::_RewardGuildXP(Player* player)
@@ -544,9 +545,9 @@ inline void KillRewarder::_RewardXP(Player* player, float rate)
         for (Unit::AuraEffectList::const_iterator i = auras.begin(); i != auras.end(); ++i)
             AddPct(xp, (*i)->GetAmount());
 
-        // 4.2.3. Calculate expansion penalty
-        if (_victim->GetTypeId() == TYPEID_UNIT && player->getLevel() >= GetMaxLevelForExpansion(_victim->ToCreature()->GetCreatureTemplate()->expansion))
-            xp = CalculatePct(xp, 10); // Players get only 10% xp for killing creatures of lower expansion levels than himself
+        // 4.2.3. Calculate expansion penalty, Not used right now due to missing Cata content.
+        /*if (_victim->GetTypeId() == TYPEID_UNIT && player->getLevel() >= GetMaxLevelForExpansion(_victim->ToCreature()->GetCreatureTemplate()->expansion))
+            xp = CalculatePct(xp, 10); // Players get only 10% xp for killing creatures of lower expansion levels than himself*/
 
         // 4.2.4. Give XP to player.
         player->GiveXP(xp, _victim, _groupRate);
@@ -680,21 +681,50 @@ void KillRewarder::Reward()
         if (!_isBattleGround || _xp)
             // 3.2.2. Reward killer.
             _RewardPlayer(_killer, false);
-
-        if (Creature* victim = _victim->ToCreature())
-            if (Guild* guild = _killer->GetGuild())
-            {
-                guild->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_KILL_CREATURE, victim->GetEntry(), 1, 0, victim, _killer);
-                guild->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_KILL_CREATURE_TYPE_GUILD, 0, 0, 0, victim, _killer); 
-            }
     }
-
+    
     // 5. Credit instance encounter.
     if (Creature* victim = _victim->ToCreature())
     {
         if (victim->IsDungeonBoss())
-            if (InstanceScript* instance = victim->GetInstanceScript())
+            if (InstanceScript* instance = _victim->GetInstanceScript())
                 instance->UpdateEncounterState(ENCOUNTER_CREDIT_KILL_CREATURE, _victim->GetEntry(), _victim);
+    }
+
+    // 6. Update guild achievements.
+    if (_isPvP)
+    {
+        if (Group* pGroup = _killer->GetGroup())
+        {
+            if (_isHonnor)
+            {
+                pGroup->UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HK_RACE, 1, 0, 0, _victim, _victim);
+                pGroup->UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HONORABLE_KILLS_GUILD, 1, 0, 0, _victim, _victim);
+            }
+            pGroup->UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_SPECIAL_PVP_KILL, 1, 0, 0, _victim, _victim);
+        }
+        else
+        {
+            if (_isHonnor)
+            {
+                _killer->UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HK_RACE, 1, 0, 0, _victim);
+                _killer->UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_HONORABLE_KILLS_GUILD, 1, 0, 0, _victim);
+            }
+            _killer->UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_SPECIAL_PVP_KILL, 1, 0, 0, _victim);
+        }
+    }
+    else
+    {
+        if (Group* pGroup = _killer->GetGroup())
+        {
+            pGroup->UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_KILL_CREATURE, _victim->GetEntry(), 1, 0, _victim, _victim);
+            pGroup->UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_KILL_CREATURE_TYPE_GUILD, _victim->GetEntry(), 1, 0, _victim, _victim);
+        }
+        else
+        {
+            _killer->UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_KILL_CREATURE, _victim->GetEntry(), 1, 0, _victim);
+            _killer->UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_KILL_CREATURE_TYPE_GUILD, _victim->GetEntry(), 1, 0, _victim);
+        }
     }
 
 }
@@ -926,6 +956,7 @@ Player::Player(WorldSession* session): Unit(true), phaseMgr(this)
 
     _activeCheats = CHEAT_NONE;
     _maxPersonalArenaRate = 0;
+    _ConquestCurrencyTotalWeekCap = 0;
 
     memset(_voidStorageItems, 0, VOID_STORAGE_MAX_SLOT * sizeof(VoidStorageItem*));
     memset(_CUFProfiles, 0, MAX_CUF_PROFILES * sizeof(CUFProfile*));
@@ -1101,6 +1132,8 @@ bool Player::Create(uint32 guidlow, CharacterCreateInfo* createInfo)
     SetCurrency(CURRENCY_TYPE_JUSTICE_POINTS, sWorld->getIntConfig(CONFIG_CURRENCY_START_JUSTICE_POINTS));
     SetCurrency(CURRENCY_TYPE_VALOR_POINTS, sWorld->getIntConfig(CONFIG_CURRENCY_START_VALOR_POINTS));
     SetCurrency(CURRENCY_TYPE_CONQUEST_POINTS, sWorld->getIntConfig(CONFIG_CURRENCY_START_CONQUEST_POINTS));
+    SetCurrency(CURRENCY_TYPE_CONQUEST_META_ARENA, 0);
+    SetCurrency(CURRENCY_TYPE_CONQUEST_META_BG, 0);
 
     // start with every map explored
     if (sWorld->getBoolConfig(CONFIG_START_ALL_EXPLORED))
@@ -1419,6 +1452,7 @@ void Player::HandleDrowning(uint32 time_diff)
             case 4815:
             case 4816:
             case 5042:
+            case 5146:
                 return;
             default:
                 break;
@@ -1692,7 +1726,7 @@ void Player::Update(uint32 p_time)
 
     if (HasUnitState(UNIT_STATE_MELEE_ATTACKING) && !HasUnitState(UNIT_STATE_CASTING))
     {
-        if (Unit* victim = getVictim())
+        if (Unit* victim = GetVictim())
         {
             // default combat reach 10
             // TODO add weapon, skill check
@@ -3217,9 +3251,17 @@ void Player::GiveLevel(uint8 level)
     }
 
     UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_REACH_LEVEL);
+    UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_REACH_LEVEL);
 
     PhaseUpdateData phaseUdateData;
     phaseUdateData.AddConditionType(CONDITION_LEVEL);
+
+    // Learn Running wild and Apprentice Riding to worgens that reach level 20
+    if (level == 20 && getRace() == RACE_WORGEN)
+    {
+        learnSpell(87840, false); // Running wild
+        learnSpell(33388, false); // Apprentice Riding
+    }
 
     phaseMgr.NotifyConditionChanged(phaseUdateData);
 
@@ -6148,6 +6190,7 @@ bool Player::UpdateSkill(uint32 skill_id, uint32 step)
 
         UpdateSkillEnchantments(skill_id, value, new_value);
         UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_REACH_SKILL_LEVEL, skill_id);
+        UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_REACH_SKILL_LEVEL, skill_id);
         return true;
     }
 
@@ -6336,6 +6379,7 @@ bool Player::UpdateSkillPro(uint16 skillId, int32 chance, uint32 step)
 
     UpdateSkillEnchantments(skillId, value, new_value);
     UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_REACH_SKILL_LEVEL, skillId);
+    UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_REACH_SKILL_LEVEL, skillId);
     sLog->outDebug(LOG_FILTER_PLAYER_SKILLS, "Player::UpdateSkillPro Chance=%3.1f%% taken", chance / 10.0f);
     return true;
 }
@@ -6458,6 +6502,7 @@ void Player::SetSkill(uint16 id, uint16 step, uint16 newVal, uint16 maxVal)
 
             UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_REACH_SKILL_LEVEL, id);
             UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILL_LEVEL, id);
+            UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_REACH_SKILL_LEVEL, id);
         }
         else                                                //remove
         {
@@ -7339,12 +7384,11 @@ bool Player::RewardHonor(Unit* victim, uint32 groupsize, int32 honor, bool pvpto
     GetSession()->SendPacket(&data);
 
     // add honor points
-    ModifyCurrency(CURRENCY_TYPE_HONOR_POINTS, int32(honor));
+    ModifyCurrency(CURRENCY_TYPE_HONOR_POINTS, int32(honor), true, true);
 
     // Add guild XP
     if (Guild *guild = GetGuild())
         guild->GiveXP(uint32(float(honor) * sWorld->getRate(RATE_XP_HONOR_EARNED_GUILD_MODIFIER)), this);
-
 
     if (InBattleground() && honor > 0)
     {
@@ -7379,7 +7423,6 @@ bool Player::RewardHonor(Unit* victim, uint32 groupsize, int32 honor, bool pvpto
     return true;
 }
 
-
 void Player::_LoadCurrency(PreparedQueryResult result)
 {
     if (!result)
@@ -7399,8 +7442,22 @@ void Player::_LoadCurrency(PreparedQueryResult result)
         cur.state = PLAYERCURRENCY_UNCHANGED;
         cur.weekCount = fields[1].GetUInt32();
         cur.totalCount = fields[2].GetUInt32();
-        cur.week_cap = GetCurrencyWeekCap(currency);
-        cur.new_cap = GetCurrencyWeekCap(currency);
+        cur.weekCap = fields[3].GetUInt32(); // GetCurrencyWeekCap(currency);
+
+        // load total conquest cap. should be after insert.
+        if (currency->Category == CURRENCY_CATEGORY_META_CONQUEST)
+        {
+            //uint32 cap = GetCurrencyWeekCap(currency);
+            //if (cap > _ConquestCurrencyTotalWeekCap)
+            //    _ConquestCurrencyTotalWeekCap = cap;
+            if(cur.weekCap == 0)
+            {
+                cur.weekCap = GetCurrencyWeekCap(currency);
+                cur.state = PLAYERCURRENCY_CHANGED;
+            }
+            if (cur.weekCap > _ConquestCurrencyTotalWeekCap)
+                _ConquestCurrencyTotalWeekCap = cur.weekCap;
+        }
 
         _currencyStorage.insert(PlayerCurrenciesMap::value_type(currencyID, cur));
 
@@ -7424,18 +7481,16 @@ void Player::_SaveCurrency(SQLTransaction& trans)
                 stmt->setUInt16(1, itr->first);
                 stmt->setUInt32(2, itr->second.weekCount);
                 stmt->setUInt32(3, itr->second.totalCount);
-                stmt->setUInt32(4, GetCurrencyWeekCap(entry));
-                stmt->setUInt32(5, itr->second.new_cap);
+                stmt->setUInt32(4, itr->second.weekCap);
                 trans->Append(stmt);
                 break;
             case PLAYERCURRENCY_CHANGED:
                 stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_PLAYER_CURRENCY);
                 stmt->setUInt32(0, itr->second.weekCount);
                 stmt->setUInt32(1, itr->second.totalCount);
-                stmt->setUInt32(2, GetCurrencyWeekCap(entry));
-                stmt->setUInt32(3, itr->second.new_cap);
-                stmt->setUInt32(4, GetGUIDLow());
-                stmt->setUInt16(5, itr->first);
+                stmt->setUInt32(2, itr->second.weekCap);
+                stmt->setUInt32(3, GetGUIDLow());
+                stmt->setUInt16(4, itr->first);
                 trans->Append(stmt);
                 break;
             default:
@@ -7462,7 +7517,8 @@ void Player::SendNewCurrency(uint32 id) const
 
     uint32 precision = (entry->Flags & CURRENCY_FLAG_HIGH_PRECISION) ? CURRENCY_PRECISION : 1;
     uint32 weekCount = itr->second.weekCount / precision;
-    uint32 weekCap = GetCurrencyWeekCap(entry) / precision;
+    //uint32 weekCap = GetCurrencyWeekCap(entry) / precision;
+    uint32 weekCap = itr->second.weekCap / precision;
 
     packet.WriteBit(weekCount);
     packet.WriteBits(0, 4); // some flags
@@ -7503,7 +7559,7 @@ void Player::SendCurrencies() const
 
         uint32 precision = (entry->Flags & CURRENCY_FLAG_HIGH_PRECISION) ? CURRENCY_PRECISION : 1;
         uint32 weekCount = itr->second.weekCount / precision;
-        uint32 weekCap = GetCurrencyWeekCap(entry) / precision;
+        uint32 weekCap = itr->second.weekCap / precision;
 
         packet.WriteBit(weekCount);
         packet.WriteBits(0, 4); // some flags
@@ -7533,37 +7589,46 @@ void Player::SendCurrencies() const
 void Player::SendPvpRewards() const
 {
     WorldPacket packet(SMSG_REQUEST_PVP_REWARDS_RESPONSE, 24);
-    packet << GetCurrencyWeekCap(CURRENCY_TYPE_CONQUEST_META_RBG, true);
+    packet << GetCurrencyCurrentWeekCap(CURRENCY_TYPE_CONQUEST_META_BG, true);
     packet << GetCurrencyOnWeek(CURRENCY_TYPE_CONQUEST_POINTS, true);
-    packet << GetCurrencyWeekCap(CURRENCY_TYPE_CONQUEST_META_ARENA, true);
-    packet << GetCurrencyOnWeek(CURRENCY_TYPE_CONQUEST_META_RBG, true);
+    packet << GetCurrencyCurrentWeekCap(CURRENCY_TYPE_CONQUEST_META_ARENA, true);
+    packet << GetCurrencyOnWeek(CURRENCY_TYPE_CONQUEST_META_BG, true);
     packet << GetCurrencyOnWeek(CURRENCY_TYPE_CONQUEST_META_ARENA, true);
-    packet << GetCurrencyWeekCap(CURRENCY_TYPE_CONQUEST_POINTS, true);
+    packet << _ConquestCurrencyTotalWeekCap / 100;
+    //packet << GetCurrencyCurrentWeekCap(CURRENCY_TYPE_CONQUEST_POINTS, true);
     GetSession()->SendPacket(&packet);
 }
 
-uint32 Player::GetCurrency(uint32 id, bool usePrecision) const
+uint32 Player::GetCurrency(uint32 id, bool precision) const
 {
     PlayerCurrenciesMap::const_iterator itr = _currencyStorage.find(id);
     if (itr == _currencyStorage.end())
         return 0;
 
-    CurrencyTypesEntry const* currency = sCurrencyTypesStore.LookupEntry(id);
-    uint32 precision = (usePrecision && currency->Flags & CURRENCY_FLAG_HIGH_PRECISION) ? CURRENCY_PRECISION : 1;
+    if (!precision)
+        return itr->second.totalCount;
 
-    return itr->second.totalCount / precision;
+    CurrencyTypesEntry const* currency = sCurrencyTypesStore.LookupEntry(id);
+    ASSERT(currency);
+
+    int32 mod = currency->Flags & CURRENCY_FLAG_HIGH_PRECISION ? 100 : 1;
+    return itr->second.totalCount / mod;
 }
 
-uint32 Player::GetCurrencyOnWeek(uint32 id, bool usePrecision) const
+uint32 Player::GetCurrencyOnWeek(uint32 id, bool precision) const
 {
     PlayerCurrenciesMap::const_iterator itr = _currencyStorage.find(id);
     if (itr == _currencyStorage.end())
         return 0;
 
-    CurrencyTypesEntry const* currency = sCurrencyTypesStore.LookupEntry(id);
-    uint32 precision = (usePrecision && currency->Flags & CURRENCY_FLAG_HIGH_PRECISION) ? CURRENCY_PRECISION : 1;
+    if (!precision)
+        return itr->second.weekCount;
 
-    return itr->second.weekCount / precision;
+    CurrencyTypesEntry const* currency = sCurrencyTypesStore.LookupEntry(id);
+    ASSERT(currency);
+
+    int32 mod = currency->Flags & CURRENCY_FLAG_HIGH_PRECISION ? 100 : 1;
+    return itr->second.weekCount / mod;
 }
 
 bool Player::HasCurrency(uint32 id, uint32 count) const
@@ -7586,6 +7651,7 @@ void Player::ModifyCurrency(uint32 id, int32 count, bool printLog/* = true*/, bo
     int32 precision = currency->Flags & CURRENCY_FLAG_HIGH_PRECISION ? CURRENCY_PRECISION : 1;
     uint32 oldTotalCount = 0;
     uint32 oldWeekCount = 0;
+    uint32 weekCap = 0;
     PlayerCurrenciesMap::iterator itr = _currencyStorage.find(id);
     if (itr == _currencyStorage.end())
     {
@@ -7600,17 +7666,17 @@ void Player::ModifyCurrency(uint32 id, int32 count, bool printLog/* = true*/, bo
     {
         oldTotalCount = itr->second.totalCount;
         oldWeekCount = itr->second.weekCount;
+        weekCap = itr->second.weekCap;
     }
 
     // count can't be more then weekCap if used (weekCap > 0)
-    uint32 weekCap = GetCurrencyWeekCap(currency);
     if (!isRefund && weekCap && count > int32(weekCap))
-        count = weekCap;
+        count = int32(weekCap);
 
     // count can't be more then totalCap if used (totalCap > 0)
     uint32 totalCap = GetCurrencyTotalCap(currency);
-    if (totalCap && count > int32(totalCap))
-        count = totalCap;
+    if (!isRefund && totalCap && count > int32(totalCap))
+        count = int32(totalCap);
 
     int32 newTotalCount = int32(oldTotalCount) + count;
     if (newTotalCount < 0)
@@ -7625,14 +7691,21 @@ void Player::ModifyCurrency(uint32 id, int32 count, bool printLog/* = true*/, bo
     {
         newWeekCount = int32(weekCap);
         // weekCap - oldWeekCount always >= 0 as we set limit before!
-        newTotalCount = oldTotalCount + (weekCap - oldWeekCount);
+        newTotalCount = int32(oldTotalCount + (weekCap - oldWeekCount));
+    }
+
+    // if conquest point exceeds weekcap
+    if(!isRefund && currency->ID == CURRENCY_TYPE_CONQUEST_POINTS && int32(oldWeekCount) + count > int32(_ConquestCurrencyTotalWeekCap))
+    {
+        newWeekCount = int32(_ConquestCurrencyTotalWeekCap);
+        newTotalCount = int32(oldTotalCount + (newWeekCount - oldWeekCount));
     }
 
     // if we get more then totalCap set to maximum;
     if (totalCap && int32(totalCap) < newTotalCount)
     {
         newTotalCount = int32(totalCap);
-        newWeekCount = weekCap;
+        newWeekCount = int32(weekCap);
     }
 
     if (uint32(newTotalCount) != oldTotalCount)
@@ -7643,13 +7716,13 @@ void Player::ModifyCurrency(uint32 id, int32 count, bool printLog/* = true*/, bo
         itr->second.totalCount = newTotalCount;
         itr->second.weekCount = isRefund ? oldWeekCount : newWeekCount;
 
-        if (count > 0)
+        if (!isRefund && count > 0)
             UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_CURRENCY, id, count);
 
         if (currency->Category == CURRENCY_CATEGORY_META_CONQUEST)
         {
             // count was changed to week limit, now we can modify original points.
-            ModifyCurrency(CURRENCY_TYPE_CONQUEST_POINTS, count, printLog);
+            ModifyCurrency(CURRENCY_TYPE_CONQUEST_POINTS, count, printLog, ignoreMultipliers, isRefund);
             return;
         }
 
@@ -7658,8 +7731,6 @@ void Player::ModifyCurrency(uint32 id, int32 count, bool printLog/* = true*/, bo
         packet.WriteBit(weekCap != 0);
         packet.WriteBit(0); // hasSeasonCount
         packet.WriteBit(!printLog); // print in log
-
-        // if hasSeasonCount packet << uint32(seasontotalearned); TODO: save this in character DB and use it
 
         packet << uint32(newTotalCount / precision);
         packet << uint32(id);
@@ -7683,15 +7754,49 @@ void Player::SetCurrency(uint32 id, uint32 count, bool /*printLog*/ /*= true*/)
     }
 }
 
-uint32 Player::GetCurrencyWeekCap(uint32 id, bool usePrecision, bool useRating) const
+uint32 Player::GetCurrencyWeekCap(uint32 id, bool usePrecision) const
 {
     CurrencyTypesEntry const* entry = sCurrencyTypesStore.LookupEntry(id);
     if (!entry)
         return 0;
 
-    uint32 precision = (usePrecision && entry->Flags & CURRENCY_FLAG_HIGH_PRECISION) ? CURRENCY_PRECISION : 1;
+    uint32 cap = GetCurrencyWeekCap(entry);
+    if(usePrecision && entry->Flags & CURRENCY_FLAG_HIGH_PRECISION)
+        cap /= 100;
 
-    return GetCurrencyWeekCap(entry, useRating) / precision;
+    return cap;
+}
+
+uint32 Player::GetCurrencyCurrentWeekCap(uint32 id, bool usePrecision) const
+{
+    PlayerCurrenciesMap::const_iterator itr = _currencyStorage.find(id);
+    if (itr == _currencyStorage.end())
+    {
+        // if not exist calculate and create new
+        /*uint32 weekCap = GetCurrencyWeekCap(id, usePrecision);
+        PlayerCurrency cur;
+        cur.state = PLAYERCURRENCY_NEW;
+        cur.totalCount = 0;
+        cur.weekCount = 0;
+        if (id == CURRENCY_TYPE_CONQUEST_META_ARENA)
+        {
+            PlayerCurrenciesMap::const_iterator itr_inner = _currencyStorage.find(CURRENCY_TYPE_CONQUEST_POINTS);
+            if (itr_inner != _currencyStorage.end())
+            {
+                cur.weekCount = itr_inner->second.weekCount;
+            }
+        }
+        cur.weekCap = weekCap;
+        _currencyStorage[id] = cur;
+
+        return weekCap;*/
+        // if not exist calculate new
+        return GetCurrencyWeekCap(id, usePrecision);
+    }
+    else
+    {
+        return usePrecision ? itr->second.weekCap / 100 : itr->second.weekCap;
+    }
 }
 
 void Player::ResetCurrencyWeekCap()
@@ -7715,35 +7820,41 @@ void Player::ResetCurrencyWeekCap()
         itr->second.state = PLAYERCURRENCY_CHANGED;
     }
 
-    UpdateConquestCurrencyCap(CURRENCY_TYPE_CONQUEST_META_ARENA);
+    UpdateConquestCurrencyCap();
 
     WorldPacket data(SMSG_WEEKLY_RESET_CURRENCY, 0);
     SendDirectMessage(&data);
 }
 
-uint32 Player::GetCurrencyWeekCap(CurrencyTypesEntry const* currency, bool useRating) const
+uint32 Player::GetCurrencyWeekCap(CurrencyTypesEntry const* currency) const
 {
-    uint32 cap = 0;
+    uint32 cap = currency->WeekCap;
+
     switch (currency->ID)
     {
-            //original conquest not have week cap
+        //original conquest not have week cap
         case CURRENCY_TYPE_CONQUEST_POINTS:
-            cap = std::max(GetCurrencyWeekCap(CURRENCY_TYPE_CONQUEST_META_ARENA, false), GetCurrencyWeekCap(CURRENCY_TYPE_CONQUEST_META_RBG, false));
-            break;
+            return _ConquestCurrencyTotalWeekCap;
         case CURRENCY_TYPE_CONQUEST_META_ARENA:
             // should add precision mod = 100
-            cap = Trinity::Currency::ConquestRatingCalculator(useRating ? _maxPersonalArenaRate : 0) * CURRENCY_PRECISION;
-            break;
-        case CURRENCY_TYPE_CONQUEST_META_RBG:
+            return Trinity::Currency::ConquestRatingCalculator(_maxPersonalArenaRate) * 100;
+        case CURRENCY_TYPE_CONQUEST_META_BG:
             // should add precision mod = 100
-            cap = Trinity::Currency::BgConquestRatingCalculator(GetRBGPersonalRating()) * CURRENCY_PRECISION;
+            return Trinity::Currency::BgConquestRatingCalculator(GetRBGPersonalRating()) * 100;
+        case CURRENCY_TYPE_HONOR_POINTS:
+        {
+            uint32 honorcap = sWorld->getIntConfig(CONFIG_CURRENCY_MAX_HONOR_POINTS);
+            if (honorcap > 0)
+                cap = honorcap;
             break;
-        case CURRENCY_TYPE_VALOR_POINTS:
-            cap = 1000 * CURRENCY_PRECISION;
+        }
+        case CURRENCY_TYPE_JUSTICE_POINTS:
+        {
+            uint32 justicecap = sWorld->getIntConfig(CONFIG_CURRENCY_MAX_JUSTICE_POINTS);
+            if (justicecap > 0)
+                cap = justicecap;
             break;
-        default:
-            cap = currency->WeekCap;
-            break;
+        }
     }
 
     return cap;
@@ -7784,33 +7895,29 @@ uint32 Player::GetCurrencyTotalCap(CurrencyTypesEntry const* currency) const
     return cap;
 }
 
-void Player::UpdateConquestCurrencyCap(uint32 currency)
+void Player::UpdateConquestCurrencyCap()
 {
-    uint32 currenciesToUpdate[2] = { currency, CURRENCY_TYPE_CONQUEST_POINTS };
+    uint32 currenciesToUpdate[3] = { CURRENCY_TYPE_CONQUEST_META_ARENA, CURRENCY_TYPE_CONQUEST_META_BG, CURRENCY_TYPE_CONQUEST_POINTS };
 
-    for (uint32 i = 0; i < 2; ++i)
+    for (uint32 i = 0; i < 3; ++i)
     {
         CurrencyTypesEntry const* currencyEntry = sCurrencyTypesStore.LookupEntry(currenciesToUpdate[i]);
         if (!currencyEntry)
             continue;
 
-        uint32 new_cap = 0;
-        uint32 cap = GetCurrencyWeekCap(currencyEntry);
+        uint32 newCap = GetCurrencyWeekCap(currencyEntry);
         PlayerCurrenciesMap::iterator itr = _currencyStorage.find(currencyEntry->ID);
         if (itr != _currencyStorage.end())
         {
-            new_cap = itr->second.new_cap;
-            if (new_cap)
+            if (newCap)
             {
-                itr->second.new_cap = 0;
-                itr->second.week_cap = new_cap;
-                cap = new_cap;
+                itr->second.weekCap = newCap;
             }
         }
 
         uint32 precision = (currencyEntry->Flags & CURRENCY_FLAG_HIGH_PRECISION) ? 100 : 1;
         WorldPacket packet(SMSG_UPDATE_CURRENCY_WEEK_LIMIT, 8);
-        packet << uint32(cap / precision);
+        packet << uint32(newCap / precision);
         packet << uint32(currenciesToUpdate[i]);
         GetSession()->SendPacket(&packet);
     }
@@ -7848,7 +7955,9 @@ uint8 Player::GetRankFromDB(uint64 guid)
 
 void Player::SetArenaTeamInfoField(uint8 slot, ArenaTeamInfoType type, uint32 value)
 {
-    SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (_arenaTeamInfoSlot[slot] * ARENA_TEAM_END) + type, value);
+    SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (slot * ARENA_TEAM_END) + type, value);
+    if (type == ARENA_TEAM_PERSONAL_RATING && value > _maxPersonalArenaRate)
+        _maxPersonalArenaRate = value;
 }
 
 uint32 Player::GetArenaTeamIdFromDB(uint64 guid, uint8 type)
@@ -7965,7 +8074,8 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea)
     // zone changed, so area changed as well, update it
     UpdateArea(newArea);
 
-    UpdateSpeed(MOVE_RUN, true);
+    if (AccountMgr::IsPlayerAccount(GetSession()->GetSecurity())) // Don't Update Speed for Gameasters. This fixes the problem that .mod speed is overridden when you walk a few meters, which sucks.
+        UpdateSpeed(MOVE_RUN, true);
 
     AreaTableEntry const* zone = GetAreaEntryByAreaID(newZone);
     if (!zone)
@@ -10043,6 +10153,17 @@ void Player::SendInitWorldStates(uint32 zoneid, uint32 areaid)
                 bf->FillInitialWorldStates(data);
                 break;
             }
+
+        case 4820:
+            if (instance && mapid == 668)
+                instance->FillInitialWorldStates(data);
+            else
+            {
+                data << uint32(4884) << uint32(0);              // 9  WORLD_STATE_HOR_WAVES_ENABLED
+                data << uint32(4882) << uint32(0);              // 10 WORLD_STATE_HOR_WAVE_COUNT
+            }
+            break;
+
             // No break here, intended.
         default:
             data << uint32(0x914) << uint32(0x0);           // 7
@@ -12018,12 +12139,22 @@ InventoryResult Player::CanUseItem(ItemTemplate const* proto) const
 
 InventoryResult Player::CanRollForItemInLFG(ItemTemplate const* proto, WorldObject const* lootedObject) const
 {
+    LfgDungeonSet const& dungeons = sLFGMgr->GetSelectedDungeons(GetGUID());
+    if (dungeons.empty())
+        return EQUIP_ERR_OK;    // not using LFG
+
     if (!GetGroup() || !GetGroup()->isLFGGroup())
         return EQUIP_ERR_OK;    // not in LFG group
 
     // check if looted object is inside the lfg dungeon
+    bool lootedObjectInDungeon = false;
     Map const* map = lootedObject->GetMap();
-    if (!sLFGMgr->inLfgDungeonMap(GetGroup()->GetGUID(), map->GetId(), map->GetDifficulty()))
+    if (uint32 dungeonId = sLFGMgr->GetDungeon(GetGroup()->GetGUID(), true))
+        if (LFGDungeonEntry const* dungeon = sLFGDungeonStore.LookupEntry(dungeonId))
+            if (uint32(dungeon->map) == map->GetId() && dungeon->difficulty == uint32(map->GetDifficulty()))
+                lootedObjectInDungeon = true;
+
+    if (!lootedObjectInDungeon)
         return EQUIP_ERR_OK;
 
     if (!proto)
@@ -12112,6 +12243,7 @@ Item* Player::StoreNewItem(ItemPosCountVec const& dest, uint32 item, bool update
         ItemAddedQuestCheck(item, count);
         UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_RECEIVE_EPIC_ITEM, item, count);
         UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_OWN_ITEM, item, 1);
+        UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_OWN_ITEM, item, 1);
         if (randomPropertyId)
             pItem->SetItemRandomProperties(randomPropertyId);
         pItem = StoreItem(dest, pItem, update);
@@ -14730,9 +14862,9 @@ void Player::OnGossipSelect(WorldObject* source, uint32 gossipListId, uint32 men
         case GOSSIP_OPTION_ARMORER:
             GetSession()->SendListInventory(guid);
             break;
-        /*case GOSSIP_OPTION_STABLEPET:
+        case GOSSIP_OPTION_STABLEPET:
             GetSession()->SendStablePet(guid);
-            break;*/
+            break;
         case GOSSIP_OPTION_TRAINER:
             GetSession()->SendTrainerList(guid);
             break;
@@ -15551,6 +15683,7 @@ void Player::RewardQuest(Quest const* quest, uint32 reward, Object* questGiver, 
         {
             UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_DAILY_QUEST, quest_id);
             UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_DAILY_QUEST_DAILY, quest_id);
+            UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_DAILY_QUEST, quest_id);
         }
     }
     else if (quest->IsWeekly())
@@ -15587,6 +15720,7 @@ void Player::RewardQuest(Quest const* quest, uint32 reward, Object* questGiver, 
         UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_QUESTS_IN_ZONE, quest->GetZoneOrSort());
     UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_QUEST_COUNT);
     UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_QUEST, quest->GetQuestId());
+    UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_QUESTS_GUILD, 1);
 
     //lets remove flag for delayed teleports
     SetCanDelayTeleport(false);
@@ -16389,7 +16523,7 @@ void Player::KilledMonster(CreatureTemplate const* cInfo, uint64 guid)
             KilledMonsterCredit(cInfo->KillCredit[i], 0);
 }
 
-void Player::KilledMonsterCredit(uint32 entry, uint64 guid)
+void Player::KilledMonsterCredit(uint32 entry, uint64 guid /*= 0*/)
 {
     uint16 addkillcount = 1;
     uint32 real_entry = entry;
@@ -18789,6 +18923,9 @@ void Player::_LoadGroup(PreparedQueryResult result)
     {
         if (Group* group = sGroupMgr->GetGroupByDbStoreId((*result)[0].GetUInt32()))
         {
+            if (group->IsLeader(GetGUID()))
+                SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_GROUP_LEADER);
+
             uint8 subgroup = group->GetMemberGroup(GetGUID());
             SetGroup(group, subgroup);
             if (getLevel() >= LEVELREQUIREMENT_HEROIC)
@@ -18799,6 +18936,9 @@ void Player::_LoadGroup(PreparedQueryResult result)
             }
         }
     }
+
+    if (!GetGroup() || !GetGroup()->IsLeader(GetGUID()))
+        RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_GROUP_LEADER);
 }
 
 void Player::_LoadBoundInstances(PreparedQueryResult result)
@@ -21340,6 +21480,11 @@ void Player::LeaveAllArenaTeams(uint64 guid)
                     at->DelMember(guid, true);
 }
 
+uint32 Player::GetRBGPersonalRating() const
+{
+    return 0;
+}
+
 void Player::SetRestBonus(float rest_bonus_new)
 {
     // Prevent resting on max level
@@ -21787,6 +21932,9 @@ inline bool Player::_StoreOrEquipNewItem(uint32 vendorslot, uint32 item, uint8 c
 
         for (int i = 0; i < MAX_ITEM_EXT_COST_CURRENCIES; ++i)
         {
+            if (iece->RequirementFlags & (ITEM_EXT_COST_CURRENCY_REQ_IS_SEASON_EARNED_1 << i))
+                continue; 
+
             if (iece->RequiredCurrency[i])
                 ModifyCurrency(iece->RequiredCurrency[i], -int32(iece->RequiredCurrencyCount[i] * stacks), true, true);
         }
@@ -21867,7 +22015,7 @@ bool Player::BuyCurrencyFromVendorSlot(uint64 vendorGuid, uint32 vendorSlot, uin
         return false;
     }
 
-    if (count % crItem->maxcount)
+    if (count && crItem->maxcount && count % crItem->maxcount != 0)
     {
         SendEquipError(EQUIP_ERR_CANT_BUY_QUANTITY, NULL, NULL);
         return false;
@@ -21905,7 +22053,13 @@ bool Player::BuyCurrencyFromVendorSlot(uint64 vendorGuid, uint32 vendorSlot, uin
                 return false;
             }
 
-            if (!HasCurrency(iece->RequiredCurrency[i], (iece->RequiredCurrencyCount[i] * stacks)))
+            if (iece->RequirementFlags & (ITEM_EXT_COST_CURRENCY_REQ_IS_SEASON_EARNED_1 << i))
+            {
+                // Not implemented
+                SendEquipError(EQUIP_ERR_VENDOR_MISSING_TURNINS, NULL, NULL); // Find correct error
+                return false;
+            }
+            else if (!HasCurrency(iece->RequiredCurrency[i], (iece->RequiredCurrencyCount[i] * stacks))) 
             {
                 SendEquipError(EQUIP_ERR_VENDOR_MISSING_TURNINS, NULL, NULL); // Find correct error
                 return false;
@@ -21919,6 +22073,30 @@ bool Player::BuyCurrencyFromVendorSlot(uint64 vendorGuid, uint32 vendorSlot, uin
             SendEquipError(EQUIP_ERR_CANT_EQUIP_RANK, NULL, NULL);
             return false;
         }
+
+        if (iece->RequiredFactionId && GetReputationRank(iece->RequiredFactionId) << iece->RequiredFactionStanding)
+        {
+            SendBuyError(BUY_ERR_REPUTATION_REQUIRE, creature, currency, 0);
+            return false;
+        }
+
+        if (iece->RequirementFlags & ITEM_EXT_COST_FLAG_REQUIRE_GUILD && !GetGuildId())
+        {
+            SendEquipError(EQUIP_ERR_VENDOR_MISSING_TURNINS, NULL, NULL); // Find correct error
+            return false;
+        }
+
+        if (iece->RequiredGuildLevel && iece->RequiredGuildLevel < GetGuildLevel())
+        {
+            SendEquipError(EQUIP_ERR_VENDOR_MISSING_TURNINS, NULL, NULL); // Find correct error
+            return false;
+        }
+
+        if (iece->RequiredAchievement && !HasAchieved(iece->RequiredAchievement))
+        {
+            SendEquipError(EQUIP_ERR_VENDOR_MISSING_TURNINS, NULL, NULL); // Find correct error
+            return false;
+        } 
     }
     else // currencies have no price defined, can only be bought with ExtendedCost
     {
@@ -21941,6 +22119,9 @@ bool Player::BuyCurrencyFromVendorSlot(uint64 vendorGuid, uint32 vendorSlot, uin
         {
             if (!iece->RequiredCurrency[i])
                 continue;
+
+            if (iece->RequirementFlags & (ITEM_EXT_COST_CURRENCY_REQ_IS_SEASON_EARNED_1 << i))
+                continue; 
 
             ModifyCurrency(iece->RequiredCurrency[i], -int32(iece->RequiredCurrencyCount[i]) * stacks, false, true);
         }
@@ -22052,7 +22233,12 @@ bool Player::BuyItemFromVendorSlot(uint64 vendorguid, uint32 vendorslot, uint32 
                 return false;
             }
 
-            if (!HasCurrency(iece->RequiredCurrency[i], iece->RequiredCurrencyCount[i] * stacks))
+            if (iece->RequirementFlags & (ITEM_EXT_COST_CURRENCY_REQ_IS_SEASON_EARNED_1 << i))
+            {
+                SendEquipError(EQUIP_ERR_VENDOR_MISSING_TURNINS, NULL, NULL); // Find correct error
+                return false;
+            }
+            else if (!HasCurrency(iece->RequiredCurrency[i], iece->RequiredCurrencyCount[i] * stacks)) 
             {
                 SendEquipError(EQUIP_ERR_VENDOR_MISSING_TURNINS, NULL, NULL);
                 return false;
@@ -22066,6 +22252,30 @@ bool Player::BuyItemFromVendorSlot(uint64 vendorguid, uint32 vendorslot, uint32 
             SendEquipError(EQUIP_ERR_CANT_EQUIP_RANK, NULL, NULL);
             return false;
         }
+
+        if (iece->RequiredFactionId && GetReputationRank(iece->RequiredFactionId) << iece->RequiredFactionStanding)
+        {
+            SendBuyError(BUY_ERR_REPUTATION_REQUIRE, creature, item, 0);
+            return false;
+        }
+
+        if (iece->RequirementFlags & ITEM_EXT_COST_FLAG_REQUIRE_GUILD && !GetGuildId())
+        {
+            SendEquipError(EQUIP_ERR_VENDOR_MISSING_TURNINS, NULL, NULL); // Find correct error
+            return false;
+        }
+
+        if (iece->RequiredGuildLevel && iece->RequiredGuildLevel < GetGuildLevel())
+        {
+            SendEquipError(EQUIP_ERR_VENDOR_MISSING_TURNINS, NULL, NULL); // Find correct error
+            return false;
+        }
+
+        if (iece->RequiredAchievement && !HasAchieved(iece->RequiredAchievement))
+        {
+            SendEquipError(EQUIP_ERR_VENDOR_MISSING_TURNINS, NULL, NULL); // Find correct error
+            return false;
+        } 
     }
 
     uint32 price = 0;
@@ -22231,6 +22441,27 @@ void Player::UpdatePvP(bool state, bool override)
         pvpInfo.endTimer = time(NULL);
         SetPvP(state);
     }
+}
+
+void Player::ModifySpellCooldown(uint32 spellId, int32 cooldown)
+{
+    SpellCooldowns::iterator itr = m_spellCooldowns.find(spellId);
+    if (itr == m_spellCooldowns.end())
+        return;
+
+    time_t now = time(NULL);
+    if (itr->second.end + (cooldown / IN_MILLISECONDS) > now)
+        itr->second.end += (cooldown / IN_MILLISECONDS);
+    else
+        m_spellCooldowns.erase(itr);
+
+    WorldPacket data(SMSG_MODIFY_COOLDOWN, 4 + 8 + 4);
+    data << uint32(spellId);            // Spell ID
+    data << uint64(GetGUID());          // Player GUID
+    data << int32(cooldown);            // Cooldown mod in milliseconds
+    GetSession()->SendPacket(&data);
+
+    sLog->outDebug(LOG_FILTER_GENERAL, "ModifySpellCooldown:: Player: %s (GUID: %u) Spell: %u cooldown: %u", GetName().c_str(), GetGUIDLow(), spellId, GetSpellCooldownDelay(spellId));
 }
 
 void Player::SendCooldownEvent(SpellInfo const* spellInfo, uint32 itemId /*= 0*/, Spell* spell /*= NULL*/, bool setCooldown /*= true*/)
@@ -22716,8 +22947,8 @@ void Player::SendInitialVisiblePackets(Unit* target)
     SendAurasForTarget(target);
     if (target->isAlive())
     {
-        if (target->HasUnitState(UNIT_STATE_MELEE_ATTACKING) && target->getVictim())
-            target->SendMeleeAttackStart(target->getVictim());
+        if (target->HasUnitState(UNIT_STATE_MELEE_ATTACKING) && target->GetVictim())
+            target->SendMeleeAttackStart(target->GetVictim());
     }
 }
 
@@ -24248,20 +24479,20 @@ PartyResult Player::CanUninviteFromGroup() const
         if (!sLFGMgr->GetKicksLeft(gguid))
             return ERR_PARTY_LFG_BOOT_LIMIT;
 
-        lfg::LfgState state = sLFGMgr->GetState(gguid);
-        if (state == lfg::LFG_STATE_BOOT)
+        LfgState state = sLFGMgr->GetState(gguid);
+        if (state == LFG_STATE_BOOT)
             return ERR_PARTY_LFG_BOOT_IN_PROGRESS;
 
-        if (grp->GetMembersCount() <= lfg::LFG_GROUP_KICK_VOTES_NEEDED)
+        if (grp->GetMembersCount() <= sLFGMgr->GetVotesNeeded(gguid))
             return ERR_PARTY_LFG_BOOT_TOO_FEW_PLAYERS;
 
-        if (state == lfg::LFG_STATE_FINISHED_DUNGEON)
+        if (state == LFG_STATE_FINISHED_DUNGEON)
             return ERR_PARTY_LFG_BOOT_DUNGEON_COMPLETE;
 
         if (grp->isRollLootActive())
             return ERR_PARTY_LFG_BOOT_LOOT_ROLLS;
 
-        /// @todo Should also be sent when anyone has recently left combat, with an aprox ~5 seconds timer.
+        // TODO: Should also be sent when anyone has recently left combat, with an aprox ~5 seconds timer.
         for (GroupReference const* itr = grp->GetFirstMember(); itr != NULL; itr = itr->next())
             if (itr->getSource() && itr->getSource()->isInCombat())
                 return ERR_PARTY_LFG_BOOT_IN_COMBAT;
@@ -24285,18 +24516,8 @@ PartyResult Player::CanUninviteFromGroup() const
 
 bool Player::isUsingLfg()
 {
-    return sLFGMgr->GetState(GetGUID()) != lfg::LFG_STATE_NONE;
-}
-
-bool Player::inRandomLfgDungeon()
-{
-    if (sLFGMgr->selectedRandomLfgDungeon(GetGUID()))
-    {
-        Map const* map = GetMap();
-        return sLFGMgr->inLfgDungeonMap(GetGUID(), map->GetId(), map->GetDifficulty());
-    }
-
-    return false;
+    uint64 guid = GetGUID();
+    return sLFGMgr->GetState(guid) != LFG_STATE_NONE;
 }
 
 void Player::SetBattlegroundOrBattlefieldRaid(Group* group, int8 subgroup)
@@ -24669,7 +24890,7 @@ void Player::UpdateCharmedAI()
     if (!charmer->isInCombat())
         GetMotionMaster()->MoveFollow(charmer, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
 
-    Unit* target = getVictim();
+    Unit* target = GetVictim();
     if (!target || !charmer->IsValidAttackTarget(target))
     {
         target = charmer->SelectNearestTarget();
@@ -24719,6 +24940,10 @@ void Player::RestoreBaseRune(uint8 index)
 
 void Player::ConvertRune(uint8 index, RuneType newType)
 {
+    if (newType == RUNE_DEATH)
+        if (HasAura(90459)) //T11 4P
+            CastSpell(this, 90507, true);
+
     SetCurrentRune(index, newType);
 
     WorldPacket data(SMSG_CONVERT_RUNE, 2);
@@ -24885,6 +25110,7 @@ void Player::StoreLootItem(uint8 lootSlot, Loot* loot)
         UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_ITEM, item->itemid, item->count);
         UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_TYPE, item->itemid, item->count, loot->loot_type);
         UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_EPIC_ITEM, item->itemid, item->count);
+        UpdateGuildAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LOOT_EPIC_ITEM, item->itemid, item->count);
 
         // LootItem is being removed (looted) from the container, delete it from the DB.
         if (loot->containerID > 0)
@@ -25218,17 +25444,26 @@ void Player::ResetAchievementCriteria(AchievementCriteriaTypes type, uint64 misc
 void Player::UpdateAchievementCriteria(AchievementCriteriaTypes type, uint64 miscValue1 /*= 0*/, uint64 miscValue2 /*= 0*/, uint64 miscValue3 /*= 0*/, Unit* unit /*= NULL*/)
 {
     m_achievementMgr->UpdateAchievementCriteria(type, miscValue1, miscValue2, miscValue3, unit, this);
-    Guild* guild = sGuildMgr->GetGuildById(GetGuildId());
-    if (!guild)
-        return;
+    //Guild* guild = sGuildMgr->GetGuildById(GetGuildId());
+    //if (!guild)
+    //    return;
 
-    // Update only individual achievement criteria here, otherwise we may get multiple updates
-    // from a single boss kill
-    if (sAchievementMgr->IsGroupCriteriaType(type))
-        return;
+    //// Update only individual achievement criteria here, otherwise we may get multiple updates
+    //// from a single boss kill
+    //if (sAchievementMgr->IsGroupCriteriaType(type))
+    //    return;
 
-    guild->UpdateAchievementCriteria(type, miscValue1, miscValue2, miscValue3, unit, this);
+    //guild->UpdateAchievementCriteria(type, miscValue1, miscValue2, miscValue3, unit, this);
 }
+
+void Player::UpdateGuildAchievementCriteria(AchievementCriteriaTypes type, uint64 miscValue1 /*= 0*/, uint64 miscValue2 /*= 0*/, uint64 miscValue3 /*= 0*/, Unit* unit /*= NULL*/)
+{
+     Guild* guild = sGuildMgr->GetGuildById(GetGuildId());
+     if (!guild)
+         return;
+
+    guild->GetAchievementMgr().UpdateAchievementCriteria(type, miscValue1, miscValue2, miscValue3, unit, this);
+ }
 
 void Player::CompletedAchievement(AchievementEntry const* entry)
 {
@@ -26426,6 +26661,13 @@ void Player::SendRefundInfo(Item* item)
     data.WriteByteSeq(guid[2]);
     for (uint8 i = 0; i < MAX_ITEM_EXT_COST_CURRENCIES; ++i)                       // currency cost data
     {
+        if (iece->RequirementFlags & (ITEM_EXT_COST_CURRENCY_REQ_IS_SEASON_EARNED_1 << i))
+        {
+            data << uint32(0);
+            data << uint32(0);
+            continue;
+        } 
+
         CurrencyTypesEntry const* currencyType = sCurrencyTypesStore.LookupEntry(iece->RequiredCurrency[i]);
         uint32 precision = (currencyType && currencyType->Flags & CURRENCY_FLAG_HIGH_PRECISION) ? CURRENCY_PRECISION : 1;
 
@@ -26483,6 +26725,13 @@ void Player::SendItemRefundResult(Item* item, ItemExtendedCostEntry const* iece,
     {
         for (uint8 i = 0; i < MAX_ITEM_EXT_COST_CURRENCIES; ++i)
         {
+            if (iece->RequirementFlags & (ITEM_EXT_COST_CURRENCY_REQ_IS_SEASON_EARNED_1 << i))
+            {
+                data << uint32(0);
+                data << uint32(0);
+                continue;
+            } 
+
             CurrencyTypesEntry const* currencyType = sCurrencyTypesStore.LookupEntry(iece->RequiredCurrency[i]);
             uint32 precision = (currencyType && currencyType->Flags & CURRENCY_FLAG_HIGH_PRECISION) ? CURRENCY_PRECISION : 1;
 
@@ -26596,10 +26845,13 @@ void Player::RefundItem(Item* item)
     // Grant back currencies
     for (uint8 i = 0; i < MAX_ITEM_EXT_COST_CURRENCIES; ++i)
     {
+        if (iece->RequirementFlags & (ITEM_EXT_COST_CURRENCY_REQ_IS_SEASON_EARNED_1 << i))
+            continue; 
+
         uint32 count = iece->RequiredCurrencyCount[i];
         uint32 currencyid = iece->RequiredCurrency[i];
         if (count && currencyid)
-            ModifyCurrency(currencyid, count, true, false, true);
+            ModifyCurrency(currencyid, count, true, true, true);
     }
 
     // Grant back money
@@ -26650,7 +26902,7 @@ void Player::_LoadPets(SQLQueryHolder *holder)
         t_Pet->owner               = fields[2].GetUInt32();
         t_Pet->modelid             = fields[3].GetUInt32();
         t_Pet->level               = fields[4].GetUInt16();
-        t_Pet->exp                 = fields[5].GetUInt8();
+        t_Pet->exp                 = fields[5].GetUInt32();
         t_Pet->reactstate          = ReactStates(fields[6].GetUInt8());
         t_Pet->slot                = fields[7].GetUInt8();
         t_Pet->name                = fields[8].GetString();
@@ -26691,7 +26943,7 @@ void Player::_LoadPets(SQLQueryHolder *holder)
                 m_Stables[guid]->m_learnSpells.push_back(t_spell);
             }
             else
-                sLog->outError(LOG_FILTER_PLAYER, "Loading PetSpells (GUID: %u) Pet doesn´t exist on PlayerSlots Clean Up?.", guid);
+                sLog->outError(LOG_FILTER_PLAYER, "Loading PetSpells (GUID: %u) Pet doesn't exist on PlayerSlots Clean Up?.", guid);
         }
         while (result->NextRow());
     }
@@ -26727,7 +26979,7 @@ void Player::_LoadPets(SQLQueryHolder *holder)
                 m_Stables[guid]->m_auras.push_back(t_aura);
             }
             else
-                sLog->outError(LOG_FILTER_PLAYER, "Loading PetCooldowns (GUID: %u) Pet doesn´t exist on PlayerSlots Clean Up?.", guid);
+                sLog->outError(LOG_FILTER_PLAYER, "Loading PetCooldowns (GUID: %u) Pet doesn't exist on PlayerSlots Clean Up?.", guid);
         }
         while (result->NextRow());
     }
@@ -26752,7 +27004,7 @@ void Player::_LoadPets(SQLQueryHolder *holder)
                 m_Stables[guid]->m_spellscooldown[spellid] = t_cooldown;
             }
             else
-                sLog->outError(LOG_FILTER_PLAYER, "Loading PetCooldown (GUID: %u) Pet doesn´t exist on PlayerSlots Clean Up?.", guid);
+                sLog->outError(LOG_FILTER_PLAYER, "Loading PetCooldown (GUID: %u) Pet doesn't exist on PlayerSlots Clean Up?.", guid);
         }
         while (result->NextRow());
     }

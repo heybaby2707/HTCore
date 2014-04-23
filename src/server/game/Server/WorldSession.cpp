@@ -129,7 +129,6 @@ WorldSession::WorldSession(uint32 id, WorldSocket* sock, AccountTypes sec, uint8
     }
 
     InitializeQueryCallbackParameters();
-
     _compressionStream = new z_stream();
     _compressionStream->zalloc = (alloc_func)NULL;
     _compressionStream->zfree = (free_func)NULL;
@@ -1093,6 +1092,15 @@ void WorldSession::ProcessQueryCallbacks()
         HandleAddIgnoreOpcodeCallBack(result);
         _addIgnoreCallback.cancel();
     }
+
+    //- HandleRenameGuild
+    if(_guildRenameCallback.IsReady())
+    {
+        std::string param = _guildRenameCallback.GetParam();
+        _guildRenameCallback.GetResult(result);
+        HandleGuildRenameCallback(param);
+        _guildRenameCallback.FreeResult();
+    }
 }
 
 void WorldSession::InitWarden(BigNumber* k, std::string const& os)
@@ -1161,3 +1169,4 @@ PacketThrottler::~PacketThrottler()
 {
     delete[] m_opcodes;
 }
+

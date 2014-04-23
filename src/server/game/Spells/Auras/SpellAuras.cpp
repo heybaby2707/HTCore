@@ -1225,6 +1225,14 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
             case SPELLFAMILY_WARRIOR:
                 switch (GetId())
                 {
+                    case 57755: // Glyph of Heroic Throw
+                        if(caster->HasAura(58357))
+                        {
+                            caster->CastSpell(target, 58567, true);
+                            if(!caster->ToPlayer()->HasSpellCooldown(58567))
+                                caster->ToPlayer()->AddSpellCooldown(58567, 0, uint32(time(NULL) + 5)); // Add 5 seconds cooldown
+                        }
+                        break;
                     case 60970: // Heroic Fury (remove Intercept cooldown)
                         if (target->GetTypeId() == TYPEID_PLAYER)
                             target->ToPlayer()->RemoveSpellCooldown(20252, true);
@@ -1260,6 +1268,15 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                 }
                 break;
             }
+            case SPELLFAMILY_DEATHKNIGHT:
+                if (GetSpellInfo()->Id == 51124) //Killing Machine
+                {
+                    if (!caster || !caster->HasAura(90459)) // T11 4 Piece
+                        break;
+
+                    caster->CastSpell(caster, 90507, true);
+                }
+            break;
             case SPELLFAMILY_MAGE:
                 if (!caster)
                     break;
@@ -1447,7 +1464,7 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                 // Blood of the North
                 // Reaping
                 // Death Rune Mastery
-                if (GetSpellInfo()->SpellIconID == 3041 || GetSpellInfo()->SpellIconID == 22 || GetSpellInfo()->SpellIconID == 2622)
+                if (GetSpellInfo()->SpellIconID == 3041 || GetSpellInfo()->SpellIconID == 22 || GetSpellInfo()->SpellIconID == 2622 || GetSpellInfo()->SpellIconID == 2724)
                 {
                     if (!GetEffect(0) || GetEffect(0)->GetAuraType() != SPELL_AURA_PERIODIC_DUMMY)
                         break;

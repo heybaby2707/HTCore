@@ -930,11 +930,20 @@ void Battleground::EndBattleground(uint32 winner)
         {
             if (team == winner)
             {
+                // Modify the guild reputation and xp - 62 rep on win, 27.9k guild xp. Only if group is guild group.
+                if (Guild* guild = sGuildMgr->GetGuildById(player->GetGuildId()))
+                {
+                    uint32 guildXP = uint32(27900);
+                    uint32 guildRep = uint32(guildXP / 450);
+                    guild->GiveXP(guildXP, player);
+                    guild->GainReputation(player->GetGUID(), 62);
+                }
+
                 // update achievement BEFORE personal rating update
                 uint32 rating = player->GetArenaPersonalRating(winnerArenaTeam->GetSlot());
                 player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_WIN_RATED_ARENA, rating ? rating : 1);
                 player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_WIN_ARENA, GetMapId());
-                player->ModifyCurrency(CURRENCY_TYPE_CONQUEST_META_ARENA, sWorld->getIntConfig(CONFIG_CURRENCY_CONQUEST_POINTS_ARENA_REWARD));
+                player->ModifyCurrency(CURRENCY_TYPE_CONQUEST_META_ARENA, sWorld->getIntConfig(CONFIG_CURRENCY_CONQUEST_POINTS_ARENA_REWARD), true, true); // should give end of week
 
                 winnerArenaTeam->MemberWon(player, loserMatchmakerRating, winnerMatchmakerChange);
 
@@ -970,17 +979,31 @@ void Battleground::EndBattleground(uint32 winner)
         if (team == winner)
         {
             if (IsRandom() || BattlegroundMgr::IsBGWeekend(GetTypeID()))
-            {
                 UpdatePlayerScore(player, SCORE_BONUS_HONOR, winner_honor);
-                if (!player->GetRandomWinner())
+
+            if (IsRandom())
+            {
+                if (BattlegroundMgr::IsBGWeekend(GetTypeID()))
                 {
-                    // 100cp awarded for the first random battleground won each day
-                    player->ModifyCurrency(CURRENCY_TYPE_CONQUEST_META_ARENA, BG_REWARD_WINNER_CONQUEST_FIRST);
-                    player->SetRandomWinner(true);
+                    if (!player->GetRandomWinner())
+                    {
+                        // 100cp awarded for the first random battleground won each day
+                        player->ModifyCurrency(CURRENCY_TYPE_CONQUEST_META_BG, BG_REWARD_WINNER_CONQUEST_FIRST, true, true);
+                        player->SetRandomWinner(true);
+                    }
                 }
+                else // 50cp awarded for each non-rated battleground won
+                    player->ModifyCurrency(CURRENCY_TYPE_CONQUEST_META_BG, BG_REWARD_WINNER_CONQUEST_LAST, true, true);
             }
-            else // 50cp awarded for each non-rated battleground won
-                player->ModifyCurrency(CURRENCY_TYPE_CONQUEST_META_ARENA, BG_REWARD_WINNER_CONQUEST_LAST);
+
+            // Modify the guild reputation and xp - 167 rep on win, 75k guild xp. Only if group is guild group.
+            if (Guild* guild = sGuildMgr->GetGuildById(player->GetGuildId()))
+            {
+                uint32 guildXP = uint32(75150);
+                uint32 guildRep = uint32(guildXP / 450);
+                guild->GiveXP(guildXP, player);
+                guild->GainReputation(player->GetGUID(), 167);
+            }
 
             player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_WIN_BG, 1);
             if (!guildAwarded)
@@ -1000,6 +1023,11 @@ void Battleground::EndBattleground(uint32 winner)
             if (IsRandom() || BattlegroundMgr::IsBGWeekend(GetTypeID()))
                 UpdatePlayerScore(player, SCORE_BONUS_HONOR, loser_honor);
         }
+
+        if (isBattleground())
+            if(player->GetTeam() && m_BgRaids[player->GetTeam()])
+                if (Guild* guild = sGuildMgr->GetGuildById(player->GetGuildId()))
+                    guild->GetChallengesMgr()->CheckBattlegroundChallenge(this, m_BgRaids[player->GetTeam()]);
 
         player->ResetAllPowers();
         player->CombatStopWithPets(true);
@@ -1532,7 +1560,7 @@ void Battleground::RemovePlayerFromResurrectQueue(uint64 player_guid)
 bool Battleground::AddObject(uint32 type, uint32 entry, float x, float y, float z, float o, float rotation0, float rotation1, float rotation2, float rotation3, uint32 /*respawnTime*/)
 {
     // If the assert is called, means that BgObjects must be resized!
-    ASSERT(type < BgObjects.size());
+//    ASSERT(type < BgObjects.size()); // Just to be sure, if we know how to solve this crash
 
     Map* map = FindBgMap();
     if (!map)
@@ -1650,7 +1678,9 @@ void Battleground::SpawnBGObject(uint32 type, uint32 respawntime)
 Creature* Battleground::AddCreature(uint32 entry, uint32 type, uint32 teamval, float x, float y, float z, float o, uint32 respawntime)
 {
     // If the assert is called, means that BgCreatures must be resized!
-    ASSERT(type < BgCreatures.size());
+    //ASSERT(type < BgCreatures.size());
+    if (type >= BgCreatures.size())
+        return NULL;
 
     Map* map = FindBgMap();
     if (!map)

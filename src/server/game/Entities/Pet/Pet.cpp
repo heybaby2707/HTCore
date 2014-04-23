@@ -851,26 +851,13 @@ bool Guardian::InitStatsForLevel(uint8 petlevel)
                     SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, maxdamage);
                     break;
                 }
-				// Todo, (Blizzlike Code needed here).
-				case 57220:
-				case 58077:
-				{
-					SetCreateHealth(m_owner->GetMaxHealth() / 3.5);
-					float mindamage, maxdamage;
-					m_owner->ToPlayer()->CalculateMinMaxDamage(BASE_ATTACK, false, false, mindamage, maxdamage);
-					SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, GetWeaponDamageRange(BASE_ATTACK, MINDAMAGE) + (m_owner->GetTotalAttackPowerValue(BASE_ATTACK) / 1.5));
-					SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, GetWeaponDamageRange(BASE_ATTACK, MAXDAMAGE) + (m_owner->GetTotalAttackPowerValue(BASE_ATTACK) / 1.5));
-				}
-				break;
-				case 58078:
-				{
-					SetCreateHealth(m_owner->GetMaxHealth() / 2.8);
-					float mindamage, maxdamage;
-					m_owner->ToPlayer()->CalculateMinMaxDamage(BASE_ATTACK, false, false, mindamage, maxdamage);
-					SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, GetWeaponDamageRange(BASE_ATTACK, MINDAMAGE) + (m_owner->GetTotalAttackPowerValue(BASE_ATTACK)));
-					SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, GetWeaponDamageRange(BASE_ATTACK, MAXDAMAGE) + (m_owner->GetTotalAttackPowerValue(BASE_ATTACK)));
-				}
-				break;
+                case 57220: // Tentacle of the Old Ones UnBlizzlike
+                case 58077:
+                    SetCreateHealth(m_owner->GetMaxHealth() / 3.5);
+                    break;
+                case 58078:
+                    SetCreateHealth(m_owner->GetMaxHealth() / 2.8);
+                    break;
                 case 1964: //force of nature
                 {
                     if (!pInfo)
@@ -898,10 +885,10 @@ bool Guardian::InitStatsForLevel(uint8 petlevel)
                 }
                 case 19668: // Shadowfiend
                 {
-                    if (!pInfo)
+                    if (pInfo)
                     {
-                        SetCreateMana(28 + 10*petlevel);
-                        SetCreateHealth(28 + 30*petlevel);
+                        SetCreateHealth(m_owner->GetMaxHealth());
+                        SetCreateMana(m_owner->GetMaxPower(POWER_MANA) / 1.5);
                     }
                     int32 bonusDmg = (int32(m_owner->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_SHADOW)* 0.375f));
                     SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, GetWeaponDamageRange(BASE_ATTACK, MINDAMAGE) + bonusDmg);
@@ -944,23 +931,41 @@ bool Guardian::InitStatsForLevel(uint8 petlevel)
                     break;
                 }
                 case 31216: // Mirror Image
+				case 47243: // Mirror Image
+				case 47244: // Mirror Image
                 {
-                    SetSpellBonusDamage(int32(m_owner->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_FROST) * 0.33f));
-                    SetDisplayId(m_owner->GetDisplayId());
-                    if (!pInfo)
+                    SetSpellBonusDamage(int32(GetOwner()->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_FROST) * 0.33f));
+                    SetSpellBonusDamage(int32(GetOwner()->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_FIRE) * 0.33f));
+                    SetSpellBonusDamage(int32(GetOwner()->SpellBaseDamageBonusDone(SPELL_SCHOOL_MASK_ARCANE) * 0.33f));
+		
+                    // Finaly Done Weapon Cloning
+                    if (uint32 weapon = m_owner->GetUInt32Value(PLAYER_VISIBLE_ITEM_16_ENTRYID))
                     {
-                        SetCreateMana(28 + 30 * petlevel);
-                        SetCreateHealth(28 + 10 * petlevel);
+                        SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, weapon);
+                    }
+                    SetDisplayId(m_owner->GetDisplayId());
+                    if (pInfo)
+                    {
+                        SetCreateHealth(m_owner->GetMaxHealth() / 2.5);
+                        SetCreateMana(m_owner->GetMaxPower(POWER_MANA) / 1.5);
                     }
                     break;
-                }
+				}
                 case 27829: // Ebon Gargoyle
                 {
-                    // Guessed
                     if (!pInfo)
-                        SetCreateHealth(m_owner->CountPctFromMaxHealth(70));
-
-                    SetSpellBonusDamage(int32(m_owner->GetTotalAttackPowerValue(BASE_ATTACK) * 0.5f));
+                    {
+                        SetCreateMana(28 + 10 * petlevel);
+                        SetCreateHealth(28 + 30 * petlevel);
+                    }
+                    if(Player *owner = m_owner->ToPlayer()) // get 100% of owning player's haste
+                    {
+                        float bonus = owner->GetRatingBonusValue(CR_HASTE_MELEE);
+                        bonus += owner->GetTotalAuraModifier(SPELL_AURA_MOD_MELEE_HASTE) + owner->GetTotalAuraModifier(SPELL_AURA_MOD_MELEE_RANGED_HASTE);
+                        ApplyCastTimePercentMod(bonus, true);
+                        SetCreateHealth(uint32(owner->GetMaxHealth() * 0.8)); // hp must be 0.8x of DK hp
+                    }
+                    SetSpellBonusDamage(int32(GetOwner()->GetTotalAttackPowerValue(BASE_ATTACK) * 0.5f));
                     SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, float(petlevel - (petlevel / 4)));
                     SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, float(petlevel + (petlevel / 4)));
                     break;

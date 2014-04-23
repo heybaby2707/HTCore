@@ -48,6 +48,7 @@ enum CreatureFlagsExtra
     CREATURE_FLAG_EXTRA_NO_XP_AT_KILL   = 0x00000040,       // creature kill not provide XP
     CREATURE_FLAG_EXTRA_TRIGGER         = 0x00000080,       // trigger creature
     CREATURE_FLAG_EXTRA_NO_TAUNT        = 0x00000100,       // creature is immune to taunt auras and effect attack me
+    CREATURE_FLAG_EXTRA_VEHICLE_ACC_DMG = 0x00001000,       // vehicle accessory is attackable
     CREATURE_FLAG_EXTRA_WORLDEVENT      = 0x00004000,       // custom flag for world event creatures (left room for merging)
     CREATURE_FLAG_EXTRA_GUARD           = 0x00008000,       // Creature is guard
     CREATURE_FLAG_EXTRA_NO_CRIT         = 0x00020000,       // creature can't do critical strikes
@@ -128,6 +129,8 @@ struct CreatureTemplate
     uint32  VehicleId;
     uint32  mingold;
     uint32  maxgold;
+    uint32  currencyId;
+    uint32  currencyCount;
     std::string AIName;
     uint32  MovementType;
     uint32  InhabitType;
@@ -140,7 +143,6 @@ struct CreatureTemplate
     uint32  questItems[MAX_CREATURE_QUEST_ITEMS];
     uint32  movementId;
     bool    RegenHealth;
-    uint32  equipmentId;
     uint32  MechanicImmuneMask;
     uint32  flags_extra;
     uint32  ScriptID;
@@ -191,7 +193,7 @@ struct CreatureBaseStats
 
     uint32 GenerateHealth(CreatureTemplate const* info) const
     {
-        return uint32((BaseHealth[info->expansion] * info->ModHealth) + 0.5f);
+        return uint32(ceil(BaseHealth[info->expansion] * info->ModHealth));
     }
 
     uint32 GenerateMana(CreatureTemplate const* info) const
@@ -200,12 +202,12 @@ struct CreatureBaseStats
         if (!BaseMana)
             return 0;
 
-        return uint32((BaseMana * info->ModMana * info->ModManaExtra) + 0.5f);
+        return uint32(ceil(BaseMana * info->ModMana));
     }
 
     uint32 GenerateArmor(CreatureTemplate const* info) const
     {
-        return uint32((BaseArmor * info->ModArmor) + 0.5f);
+        return uint32(ceil(BaseArmor * info->ModArmor));
     }
 
     static CreatureBaseStats const* GetBaseStats(uint8 level, uint8 unitClass);
@@ -236,7 +238,8 @@ struct EquipmentInfo
 };
 
 // Benchmarked: Faster than std::map (insert/find)
-typedef UNORDERED_MAP<uint16, EquipmentInfo> EquipmentInfoContainer;
+typedef UNORDERED_MAP<uint8, EquipmentInfo> EquipmentInfoContainerInternal;
+typedef UNORDERED_MAP<uint32, EquipmentInfoContainerInternal> EquipmentInfoContainer;
 
 // from `creature` table
 struct CreatureData
@@ -246,7 +249,7 @@ struct CreatureData
     uint16 mapid;
     uint16 phaseMask;
     uint32 displayid;
-    int32 equipmentId;
+    int8 equipmentId;
     float posX;
     float posY;
     float posZ;
@@ -345,7 +348,7 @@ struct VendorItemData
         return m_items[slot];
     }
     bool Empty() const { return m_items.empty(); }
-    uint8 GetItemCount() const { return m_items.size(); }
+    uint32 GetItemCount() const { return m_items.size(); }
     void AddItem(uint32 item, int32 maxcount, uint32 ptime, uint32 ExtendedCost, uint8 type)
     {
         m_items.push_back(new VendorItem(item, maxcount, ptime, ExtendedCost, type));
@@ -409,7 +412,7 @@ typedef std::map<uint32, time_t> CreatureSpellCooldowns;
 // max different by z coordinate for creature aggro reaction
 #define CREATURE_Z_ATTACK_RANGE 3
 
-#define MAX_VENDOR_ITEMS 300                                // Limitation in 4.x.x item count in SMSG_LIST_INVENTORY
+#define MAX_VENDOR_ITEMS 150                                // Limitation in 4.x.x item count in SMSG_LIST_INVENTORY
 
 enum CreatureCellMoveState
 {
@@ -455,13 +458,12 @@ class Creature : public Unit, public GridObject<Creature>, public MapCreature
         bool Create(uint32 guidlow, Map* map, uint32 phaseMask, uint32 Entry, uint32 vehId, uint32 team, float x, float y, float z, float ang, const CreatureData* data = NULL);
         bool LoadCreaturesAddon(bool reload = false);
         void SelectLevel(const CreatureTemplate* cinfo);
-        void LoadEquipment(uint32 equip_entry, bool force=false);
+        void LoadEquipment(int8 id = 1, bool force = false);
 
         uint32 GetDBTableGUIDLow() const { return m_DBTableGuid; }
 
         void Update(uint32 time);                         // overwrited Unit::Update
         void GetRespawnPosition(float &x, float &y, float &z, float* ori = NULL, float* dist =NULL) const;
-        uint32 GetEquipmentId() const { return GetCreatureTemplate()->equipmentId; }
 
         void SetCorpseDelay(uint32 delay) { m_corpseDelay = delay; }
         uint32 GetCorpseDelay() const { return m_corpseDelay; }
@@ -543,19 +545,27 @@ class Creature : public Unit, public GridObject<Creature>, public MapCreature
         void UpdateMaxPower(Powers power);
         void UpdateAttackPowerAndDamage(bool ranged = false);
         void UpdateDamagePhysical(WeaponAttackType attType);
+
+        uint8 GetOriginalEquipmentId() const { return m_originalEquipmentId; }
         uint32 GetCurrentEquipmentId() { return m_equipmentId; }
-        void SetCurrentEquipmentId(uint32 entry) { m_equipmentId = entry; }
+        void SetCurrentEquipmentId(uint8 id) { m_equipmentId = id; }
         float GetSpellDamageMod(int32 Rank);
 
         VendorItemData const* GetVendorItems() const;
         uint32 GetVendorItemCurrentCount(VendorItem const* vItem);
         uint32 UpdateVendorItemCurrentCount(VendorItem const* vItem, uint32 used_count);
-
         TrainerSpellData const* GetTrainerSpells() const;
 
         CreatureTemplate const* GetCreatureTemplate() const { return m_creatureInfo; }
         CreatureData const* GetCreatureData() const { return m_creatureData; }
         CreatureAddon const* GetCreatureAddon() const;
+
+        void SetCurrencyLoot(uint32 id, uint32 cnt)
+        {
+            //Todo: Fix that
+            //m_creatureInfo->currencyId = id;
+            //m_creatureInfo->currencyCount = cnt;
+        }
 
         std::string GetAIName() const;
         std::string GetScriptName() const;
@@ -647,6 +657,7 @@ class Creature : public Unit, public GridObject<Creature>, public MapCreature
         void SendZoneUnderAttackMessage(Player* attacker);
 
         void SetInCombatWithZone();
+        void OffhandCheck();
 
         bool hasQuest(uint32 quest_id) const;
         bool hasInvolvedQuest(uint32 quest_id)  const;
@@ -743,7 +754,8 @@ class Creature : public Unit, public GridObject<Creature>, public MapCreature
         void Regenerate(Powers power);
         MovementGeneratorType m_defaultMovementType;
         uint32 m_DBTableGuid;                               ///< For new or temporary creatures is 0 for saved it is lowguid
-        uint32 m_equipmentId;
+        uint8 m_equipmentId;
+        uint8 m_originalEquipmentId;
 
         bool m_AlreadyCallAssistance;
         bool m_AlreadySearchedAssistance;

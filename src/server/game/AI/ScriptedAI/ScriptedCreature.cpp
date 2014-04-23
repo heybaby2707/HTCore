@@ -141,7 +141,7 @@ void ScriptedAI::DoStartNoMovement(Unit* victim)
 
 void ScriptedAI::DoStopAttack()
 {
-    if (me->getVictim())
+    if (me->GetVictim())
         me->AttackStop();
 }
 
@@ -370,9 +370,7 @@ void ScriptedAI::SetEquipmentSlots(bool loadDefault, int32 mainHand /*= EQUIP_NO
 {
     if (loadDefault)
     {
-        if (CreatureTemplate const* creatureInfo = sObjectMgr->GetCreatureTemplate(me->GetEntry()))
-            me->LoadEquipment(creatureInfo->equipmentId, true);
-
+        me->LoadEquipment(me->GetOriginalEquipmentId(), true);
         return;
     }
 
@@ -411,7 +409,7 @@ bool ScriptedAI::EnterEvadeIfOutOfCombatArea(uint32 const diff)
         return false;
     }
 
-    if (me->IsInEvadeMode() || !me->getVictim())
+    if (me->IsInEvadeMode() || !me->GetVictim())
         return false;
 
     float x = me->GetPositionX();
